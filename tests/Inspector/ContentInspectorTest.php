@@ -69,4 +69,18 @@ final class ContentInspectorTest extends TestCase
 
         $this->assertSame($expected, $inspector->getContentOverview($package));
     }
+
+    public function testGetContentOverviewFallsBackWhenSupportingProviderReturnsNull(): void
+    {
+        $package = $this->createStub(Package::class);
+        $expected = new ContentOverview(1, 10);
+        $empty = $this->createStub(ContentProviderInterface::class);
+        $empty->method('supports')->willReturn(true);
+        $empty->method('getContentOverview')->willReturn(null);
+        $fallback = $this->createStub(ContentProviderInterface::class);
+        $fallback->method('supports')->willReturn(true);
+        $fallback->method('getContentOverview')->willReturn($expected);
+
+        $this->assertSame($expected, (new ContentInspector([$empty, $fallback]))->getContentOverview($package));
+    }
 }

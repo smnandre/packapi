@@ -2,6 +2,10 @@
 
 ## Core Models
 
+### PackageReport
+
+Returned by `PackageInspectorFacade::inspect()`. It keeps the package and all six analysis sections as typed readonly properties. Its helper methods expose completeness, missing data, download totals, security counts, repository URL, and a decision-ready summary.
+
 ### Metadata
 ### DownloadStats
 ### ContentOverview

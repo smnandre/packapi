@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace PackApi\Inspector;
 
+use PackApi\Model\ContentOverview;
+use PackApi\Model\Metadata;
 use PackApi\Model\QualityScore;
 use PackApi\Package\Package;
 use PackApi\Provider\ContentProviderInterface;
@@ -33,17 +35,23 @@ final class QualityInspector implements QualityInspectorInterface
     {
         $content = $this->contentInspector->getContentOverview($package);
         $meta = $this->metadataInspector->getMetadata($package);
-        $bestPractices = $this->bestPracticeProvider?->getContentOverview($package);
         if (!$content || !$meta) {
             return null;
         }
+
+        return $this->score($package, $content, $meta);
+    }
+
+    public function score(Package $package, ContentOverview $content, Metadata $metadata): QualityScore
+    {
+        $bestPractices = $this->bestPracticeProvider?->getContentOverview($package);
 
         $criteria = [
             'hasReadme' => $content->hasReadme,
             'hasLicense' => $content->hasLicense,
             'hasTests' => $content->hasTests,
-            'hasDescription' => !empty($meta->description),
-            'hasRepository' => !empty($meta->repository),
+            'hasDescription' => !empty($metadata->description),
+            'hasRepository' => !empty($metadata->repository),
             'ignoredFiles' => count($content->ignoredFiles),
         ];
         if ($bestPractices) {

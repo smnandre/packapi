@@ -60,4 +60,19 @@ final class MetadataInspectorTest extends TestCase
 
         $this->assertNull($inspector->getMetadata($package));
     }
+
+    public function testGetMetadataFallsBackWhenSupportingProviderReturnsNull(): void
+    {
+        $package = $this->createStub(Package::class);
+        $expected = new Metadata('fallback');
+
+        $empty = $this->createStub(MetadataProviderInterface::class);
+        $empty->method('supports')->willReturn(true);
+        $empty->method('getMetadata')->willReturn(null);
+        $fallback = $this->createStub(MetadataProviderInterface::class);
+        $fallback->method('supports')->willReturn(true);
+        $fallback->method('getMetadata')->willReturn($expected);
+
+        $this->assertSame($expected, (new MetadataInspector([$empty, $fallback]))->getMetadata($package));
+    }
 }

@@ -34,7 +34,10 @@ final class ActivityInspector implements ActivityInspectorInterface
     {
         foreach ($this->providers as $provider) {
             if ($provider->supports($package)) {
-                return $provider->getActivitySummary($package);
+                $activity = $provider->getActivitySummary($package);
+                if (null !== $activity) {
+                    return $activity;
+                }
             }
         }
 

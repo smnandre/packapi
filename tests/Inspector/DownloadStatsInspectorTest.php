@@ -67,4 +67,25 @@ final class DownloadStatsInspectorTest extends TestCase
 
         $this->assertNull((new DownloadStatsInspector([]))->getStatsForPeriod($package, $period));
     }
+
+    public function testFallsBackWhenSupportingProviderReturnsNoStats(): void
+    {
+        $package = $this->createStub(Package::class);
+        $period = new DownloadPeriod('daily', 0, new \DateTimeImmutable('2023-01-01'), new \DateTimeImmutable('2023-01-02'));
+        $expected = new DownloadStats(['daily' => $period]);
+
+        $empty = $this->createStub(DownloadStatsProviderInterface::class);
+        $empty->method('supports')->willReturn(true);
+        $empty->method('getStats')->willReturn(null);
+        $empty->method('getStatsForPeriod')->willReturn(null);
+        $fallback = $this->createStub(DownloadStatsProviderInterface::class);
+        $fallback->method('supports')->willReturn(true);
+        $fallback->method('getStats')->willReturn($expected);
+        $fallback->method('getStatsForPeriod')->willReturn($expected);
+
+        $inspector = new DownloadStatsInspector([$empty, $fallback]);
+
+        $this->assertSame($expected, $inspector->getStats($package));
+        $this->assertSame($expected, $inspector->getStatsForPeriod($package, $period));
+    }
 }
