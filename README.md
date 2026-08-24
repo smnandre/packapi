@@ -9,12 +9,12 @@
 
 </div>
 
-Get insights from **Composer**, **NPM**, **GitHub**, and more via a unified, strongly‑typed API.
+Get insights from **Composer**, **NPM**, **Swift packages**, **GitHub**, and more via a unified, strongly‑typed API.
 
 
 ## Features
 
-- **Multi‑ecosystem**: Composer, NPM, GitHub, jsDelivr, OSV, BundlePhobia
+- **Multi‑ecosystem**: Composer, NPM, Swift packages, GitHub, jsDelivr, OSV, BundlePhobia
 - **Analyses**: Metadata, downloads, security, activity, quality
 - **Strong typing**: PHP 8.3+ with strict types
 - **Extensible**: Provider/factory architecture
@@ -64,7 +64,9 @@ For activity, content, quality, and OSV security, add the relevant provider fact
 |--------------|-------------------|----------|-----------|----------|----------|---------|-------------|
 | **Composer** | `ComposerPackage` | Yes      | Yes       | Yes      | Yes      | Yes     | No          |
 | **NPM**      | `NpmPackage`      | Yes      | Yes       | Yes      | Yes      | Yes     | Yes         |
-| **GitHub**   | Any with repo URL | Yes      | Yes       | Yes      | Yes      | Yes     | No          |
+| **Swift**    | `SwiftPackage`    | Via GitHub | Via jsDelivr | Via GitHub | Via GitHub | Via GitHub/jsDelivr | No |
+
+GitHub providers can enrich any package that has a GitHub repository URL. They expose repository metadata, content, activity, and security advisories, but not registry download counts.
 
 ## Usage Examples
 
@@ -109,6 +111,23 @@ if ($monthly) {
     $days = $monthly->getEnd()->diff($monthly->getStart())->days + 1;
     echo "Daily average: " . number_format($monthly->getCount() / $days) . "\n";
 }
+```
+
+### Swift Package CDN Statistics
+
+Swift packages are identified by their GitHub owner and repository. jsDelivr tracks CDN requests for tagged GitHub releases; these counts measure CDN use, not SwiftPM resolution downloads.
+
+```php
+use PackApi\Bridge\JsDelivr\JsDelivrProviderFactory;
+use PackApi\Inspector\DownloadStatsInspector;
+use PackApi\Package\SwiftPackage;
+
+$inspector = new DownloadStatsInspector([
+    (new JsDelivrProviderFactory($httpFactory))->createStatsProvider(),
+]);
+
+$stats = $inspector->getStats(new SwiftPackage('Alamofire', 'Alamofire'));
+echo $stats?->get('monthly')?->getCount() ?? 'N/A';
 ```
 
 ### Security Advisory Scanning
@@ -226,11 +245,11 @@ PackApi uses a clean, extensible architecture:
 
 ### Core Components
 
-- **Packages**: Represent different package types (`ComposerPackage`, `NpmPackage`)
+- **Packages**: Represent different package types (`ComposerPackage`, `NpmPackage`, `SwiftPackage`)
 - **Inspectors**: Analyze specific aspects (metadata, downloads, security, etc.)
 - **Providers**: Fetch data from external sources (Packagist, GitHub, NPM, etc.)
 - **Models**: Strongly-typed value objects for results
-- **Builder**: Fluent API for configuration
+- **Facade**: Runs a configured set of inspectors through one entry point
 
 ### Provider Pattern
 

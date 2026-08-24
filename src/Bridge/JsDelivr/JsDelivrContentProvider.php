@@ -15,9 +15,14 @@ namespace PackApi\Bridge\JsDelivr;
 
 use PackApi\Model\ContentOverview;
 use PackApi\Model\File;
+use PackApi\Package\NpmPackage;
 use PackApi\Package\Package;
+use PackApi\Package\SwiftPackage;
 use PackApi\Provider\ContentProviderInterface;
 
+/**
+ * @author Simon André <smn.andre@gmail.com>
+ */
 final class JsDelivrContentProvider implements ContentProviderInterface
 {
     public function __construct(private JsDelivrApiClient $client)
@@ -26,15 +31,16 @@ final class JsDelivrContentProvider implements ContentProviderInterface
 
     public function supports(Package $package): bool
     {
-        $id = $package->getIdentifier();
-
-        return str_starts_with($id, 'npm/') || str_starts_with($id, 'composer/');
+        return $package instanceof NpmPackage || $package instanceof SwiftPackage;
     }
 
     public function getContentOverview(Package $package): ?ContentOverview
     {
-        $id = $package->getIdentifier();
-        $filesData = $this->client->fetchFileList($id);
+        $filesData = match (true) {
+            $package instanceof NpmPackage => $this->client->fetchFileList('npm/'.$package->getName()),
+            $package instanceof SwiftPackage => $this->client->fetchFileList("gh/{$package->getOwner()}/{$package->getRepository()}"),
+            default => null,
+        };
         if (!$filesData || empty($filesData['files'])) {
             return null;
         }

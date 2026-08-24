@@ -2,7 +2,7 @@
 
 > **Integration with jsDelivr API for CDN statistics and package metadata**
 
-The jsDelivr Bridge interacts with the jsDelivr data API to retrieve CDN download counts, package metadata and file listings for packages published on npm or Packagist.
+The jsDelivr Bridge interacts with the jsDelivr data API to retrieve CDN request counts, package metadata and file listings for npm packages and GitHub-hosted Swift packages.
 
 ---
 
@@ -53,9 +53,8 @@ $contentProvider = $factory->createContentProvider();
 ```php
 $client = new JsDelivrApiClient($httpClient);
 
-// Fetch meta data for npm or composer packages
+// Fetch metadata for an npm package
 $meta = $client->fetchPackageMeta('npm/lodash');
-$meta = $client->fetchPackageMeta('composer/symfony/console');
 ```
 
 ### **File Listing**
@@ -67,6 +66,16 @@ $files = $client->fetchFileList('npm/lodash');
 $files = $client->fetchFileList('npm/lodash', '4.17.21');
 ```
 
+### **CDN statistics**
+
+```php
+// npm package
+$stats = $client->fetchPackageStats('npm', 'lodash');
+
+// tagged GitHub release, including a Swift package
+$stats = $client->fetchPackageStats('gh', 'Alamofire/Alamofire');
+```
+
 ---
 
 ## 📦 **Provider Implementations**
@@ -75,7 +84,9 @@ $files = $client->fetchFileList('npm/lodash', '4.17.21');
 Uses `fetchPackageMeta()` to populate the generic `Metadata` model with name, description, license and repository URL.
 
 ### **Stats Provider**
-Reads the `hits` field from `fetchPackageMeta()` and exposes monthly CDN download counts via `DownloadStats`.
+Reads the daily `hits.dates` values from `fetchPackageStats()` and exposes their rolling reporting window as the `monthly` `DownloadPeriod`. `cdnRequests`, `cdnBandwidth`, and `lastUpdated` are also populated on `DownloadStats`.
+
+Custom periods are calculated from the daily values currently returned by jsDelivr. A period outside that reporting window returns `null`.
 
 ### **Content Provider**
 Transforms the `fetchFileList()` response into a `ContentOverview` with file count, total size and file flags.
@@ -145,4 +156,4 @@ Use `MockHttpClient` from Symfony to simulate API responses when testing provide
 
 ---
 
-*Last updated: 2025-07-28*
+*Last updated: 2026-08-24*

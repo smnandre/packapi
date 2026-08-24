@@ -2,7 +2,7 @@
 
 > **Modern PHP Library for Package Analysis Across Multiple Ecosystems**
 
-Welcome to the comprehensive documentation for PackApi, a provider-based library that analyzes open source packages from Composer, NPM, GitHub, jsDelivr, and more.
+Welcome to the comprehensive documentation for PackApi, a provider-based library that analyzes Composer, NPM, and Swift packages through Packagist, GitHub, jsDelivr, OSV, and other data providers.
 
 ---
 
@@ -28,6 +28,7 @@ Package-specific implementations and providers:
 
 - **[Composer System](systems/composer.md)** - PHP package ecosystem
 - **[NPM System](systems/npm.md)** - Node.js package ecosystem
+- **[Swift System](systems/swift.md)** - GitHub-hosted Swift packages
 
 ### **Analysis Types** 🔍
 Available package analysis capabilities:
@@ -53,7 +54,6 @@ Available package analysis capabilities:
 ```php
 use PackApi\Bridge\Packagist\PackagistProviderFactory;
 use PackApi\Bridge\GitHub\GitHubProviderFactory;
-use PackApi\Bridge\JsDelivr\JsDelivrProviderFactory;
 use PackApi\Bridge\OSV\OSVProviderFactory;
 use PackApi\Http\HttpClientFactory;
 use PackApi\Inspector\{MetadataInspector, DownloadStatsInspector, ContentInspector, ActivityInspector, SecurityInspector, QualityInspector};
@@ -62,7 +62,6 @@ use PackApi\Package\ComposerPackage;
 $httpFactory = new HttpClientFactory();
 $packagist = new PackagistProviderFactory($httpFactory);
 $github    = new GitHubProviderFactory($httpFactory, $_ENV['GITHUB_TOKEN'] ?? null);
-$jsdelivr  = new JsDelivrProviderFactory($httpFactory);
 $osv       = new OSVProviderFactory($httpFactory);
 
 $metadataInspector = new MetadataInspector([
@@ -71,7 +70,6 @@ $metadataInspector = new MetadataInspector([
 ]);
 $downloadsInspector = new DownloadStatsInspector([
     $packagist->createStatsProvider(),
-    $jsdelivr->createStatsProvider(),
 ]);
 
 $package = new ComposerPackage('symfony/maker-bundle');
@@ -108,12 +106,13 @@ PackApi follows a **provider-based architecture** with three key layers:
 
 ## 🔧 **Supported Ecosystems**
 
-| Ecosystem | Package Type | Metadata | Downloads | Content | Security | Activity |
-|-----------|--------------|----------|-----------|---------|----------|----------|
-| **Composer** | `ComposerPackage` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **NPM** | `NpmPackage` | ✅ | ✅ | ✅ | ❌ | ❌ |
-| **GitHub** | Any | ✅ | ❌ | ✅ | ✅ | ✅ |
-| **jsDelivr** | Any | ✅ | ✅ | ✅ | ❌ | ❌ |
+| Package type | Metadata | Downloads | Content | Security | Activity |
+|--------------|----------|-----------|---------|----------|----------|
+| `ComposerPackage` | Packagist, GitHub | Packagist | Packagist, GitHub | Packagist, OSV, GitHub | Packagist, GitHub |
+| `NpmPackage` | NPM, jsDelivr, GitHub | NPM, jsDelivr | NPM, jsDelivr, GitHub | OSV, GitHub | GitHub |
+| `SwiftPackage` | GitHub | jsDelivr | GitHub, jsDelivr | GitHub | GitHub |
+
+GitHub providers require a GitHub repository URL. `SwiftPackage` sets it automatically; other package types can receive one through `Package::setRepositoryUrl()` or registry metadata.
 
 ---
 
@@ -148,4 +147,4 @@ This project is licensed under the MIT License. See the [LICENSE](../LICENSE) fi
 
 ---
 
-*Documentation last updated: 2025-07-28*
+*Documentation last updated: 2026-08-24*
