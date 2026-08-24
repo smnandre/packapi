@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace PackApi\Inspector;
 
+use PackApi\Http\HttpClientFactoryInterface;
+use PackApi\Model\PackageReport;
 use PackApi\Package\Package;
 
 /**
@@ -20,6 +22,24 @@ use PackApi\Package\Package;
  */
 final class PackageInspectorFacade
 {
+    public static function defaults(
+        ?HttpClientFactoryInterface $httpClientFactory = null,
+        #[\SensitiveParameter]
+        ?string $githubToken = null,
+    ): self {
+        $builder = self::builder($httpClientFactory);
+        if (null !== $githubToken) {
+            $builder = $builder->withGitHubToken($githubToken);
+        }
+
+        return $builder->build();
+    }
+
+    public static function builder(?HttpClientFactoryInterface $httpClientFactory = null): PackageInspectorBuilder
+    {
+        return PackageInspectorBuilder::defaults($httpClientFactory);
+    }
+
     public function __construct(
         public readonly MetadataInspectorInterface $metadataInspector,
         public readonly DownloadStatsInspectorInterface $downloadStatsInspector,
@@ -30,22 +50,47 @@ final class PackageInspectorFacade
     ) {
     }
 
-    // Unified API
+    public function inspect(Package $package): PackageReport
+    {
+        $metadata = $this->metadataInspector->getMetadata($package);
+        if (null === $package->getRepositoryUrl() && null !== $metadata?->repository) {
+            $package->setRepositoryUrl($metadata->repository);
+        }
+
+        $downloads = $this->downloadStatsInspector->getStats($package);
+        $content = $this->contentInspector->getContentOverview($package);
+        $activity = $this->activityInspector->getActivitySummary($package);
+        $security = $this->securityInspector->getSecurityAdvisories($package);
+        $quality = $this->qualityInspector instanceof QualityInspector && null !== $content && null !== $metadata
+            ? $this->qualityInspector->score($package, $content, $metadata)
+            : $this->qualityInspector->getQualityScore($package);
+
+        return new PackageReport(
+            $package,
+            $metadata,
+            $downloads,
+            $content,
+            $activity,
+            $security,
+            $quality,
+        );
+    }
+
     /**
      * @return array<string, mixed>
      */
     public function analyze(Package $package): array
     {
-        $contentOverview = $this->contentInspector->getContentOverview($package);
+        $report = $this->inspect($package);
 
         return [
-            'metadata' => $this->metadataInspector->getMetadata($package),
-            'downloads' => $this->downloadStatsInspector->getStats($package),
-            'content' => $contentOverview,
-            'activity' => $this->activityInspector->getActivitySummary($package),
-            'security' => $this->securityInspector->getSecurityAdvisories($package),
-            'quality' => $this->qualityInspector->getQualityScore($package),
-            'best_practices' => $contentOverview,
+            'metadata' => $report->metadata,
+            'downloads' => $report->downloads,
+            'content' => $report->content,
+            'activity' => $report->activity,
+            'security' => $report->securityAdvisories,
+            'quality' => $report->quality,
+            'best_practices' => $report->content,
         ];
     }
 }

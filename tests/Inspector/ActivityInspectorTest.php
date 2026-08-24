@@ -69,4 +69,18 @@ final class ActivityInspectorTest extends TestCase
 
         $this->assertSame($expected, $inspector->getActivitySummary($package));
     }
+
+    public function testGetActivitySummaryFallsBackWhenSupportingProviderReturnsNull(): void
+    {
+        $package = $this->createStub(Package::class);
+        $expected = new ActivitySummary();
+        $empty = $this->createStub(ActivityProviderInterface::class);
+        $empty->method('supports')->willReturn(true);
+        $empty->method('getActivitySummary')->willReturn(null);
+        $fallback = $this->createStub(ActivityProviderInterface::class);
+        $fallback->method('supports')->willReturn(true);
+        $fallback->method('getActivitySummary')->willReturn($expected);
+
+        $this->assertSame($expected, (new ActivityInspector([$empty, $fallback]))->getActivitySummary($package));
+    }
 }

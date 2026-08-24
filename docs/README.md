@@ -52,32 +52,14 @@ Available package analysis capabilities:
 ## 🚀 **Quick Start Example**
 
 ```php
-use PackApi\Bridge\Packagist\PackagistProviderFactory;
-use PackApi\Bridge\GitHub\GitHubProviderFactory;
-use PackApi\Bridge\OSV\OSVProviderFactory;
-use PackApi\Http\HttpClientFactory;
-use PackApi\Inspector\{MetadataInspector, DownloadStatsInspector, ContentInspector, ActivityInspector, SecurityInspector, QualityInspector};
+use PackApi\Inspector\PackageInspectorFacade;
 use PackApi\Package\ComposerPackage;
 
-$httpFactory = new HttpClientFactory();
-$packagist = new PackagistProviderFactory($httpFactory);
-$github    = new GitHubProviderFactory($httpFactory, $_ENV['GITHUB_TOKEN'] ?? null);
-$osv       = new OSVProviderFactory($httpFactory);
-
-$metadataInspector = new MetadataInspector([
-    $packagist->createMetadataProvider(),
-    $github->createMetadataProvider(),
-]);
-$downloadsInspector = new DownloadStatsInspector([
-    $packagist->createStatsProvider(),
-]);
-
 $package = new ComposerPackage('symfony/maker-bundle');
-$metadata = $metadataInspector->getMetadata($package);
-$downloads = $downloadsInspector->getStats($package);
+$report = PackageInspectorFacade::defaults()->inspect($package);
 
-echo "Package: " . ($metadata?->name ?? 'N/A') . "\n";
-echo "Downloads (monthly): " . ($downloads?->get('monthly')?->getCount() ?? 'N/A') . "\n";
+echo "Package: ".($report->metadata?->name ?? $package->getName())."\n";
+echo "Downloads (monthly): ".($report->getMonthlyDownloads() ?? 'N/A')."\n";
 ```
 
 ---

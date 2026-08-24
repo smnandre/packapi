@@ -34,7 +34,10 @@ final class ContentInspector implements ContentInspectorInterface
     {
         foreach ($this->providers as $provider) {
             if ($provider->supports($package)) {
-                return $provider->getContentOverview($package);
+                $content = $provider->getContentOverview($package);
+                if (null !== $content) {
+                    return $content;
+                }
             }
         }
 

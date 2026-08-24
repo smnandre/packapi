@@ -39,7 +39,10 @@ final class MetadataInspector implements MetadataInspectorInterface
     {
         foreach ($this->providers as $provider) {
             if ($provider->supports($package)) {
-                return $provider->getMetadata($package);
+                $metadata = $provider->getMetadata($package);
+                if (null !== $metadata) {
+                    return $metadata;
+                }
             }
         }
 

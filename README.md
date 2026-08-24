@@ -33,30 +33,18 @@ composer require smnandre/packapi
 ### Basic Usage
 
 ```php
-use PackApi\Bridge\Packagist\PackagistProviderFactory;
-use PackApi\Http\HttpClientFactory;
-use PackApi\Inspector\{MetadataInspector, DownloadStatsInspector};
+use PackApi\Inspector\PackageInspectorFacade;
 use PackApi\Package\ComposerPackage;
 
-$http = new HttpClientFactory();
-$packagist = new PackagistProviderFactory($http);
-
-$metadata = new MetadataInspector([
-    $packagist->createMetadataProvider(),
-]);
-$downloads = new DownloadStatsInspector([
-    $packagist->createStatsProvider(),
-]);
-
 $package = new ComposerPackage('symfony/console');
-$meta = $metadata->getMetadata($package);
-$stats = $downloads->getStats($package);
+$report = PackageInspectorFacade::defaults()->inspect($package);
 
-echo 'Package: '.($meta?->name ?? 'N/A')."\n";
-echo 'Monthly downloads: '.($stats?->get('monthly')?->getCount() ?? 'N/A')."\n";
+echo 'Package: '.($report->metadata?->name ?? $package->getName())."\n";
+echo 'Monthly downloads: '.($report->getMonthlyDownloads() ?? 'N/A')."\n";
+echo 'Quality: '.($report->quality?->grade ?? 'N/A')."\n";
 ```
 
-For activity, content, quality, and OSV security, add the relevant provider factories (GitHub, jsDelivr, OSV) and pass them to the corresponding inspectors.
+The default preset configures Packagist, NPM, GitHub, jsDelivr, and OSV. `PackageReport` keeps every detailed result typed and adds a compact summary, completeness state, and common decision values.
 
 ## Supported Package Types
 
@@ -232,12 +220,14 @@ Pass a PSR‑3 logger to `HttpClientFactory` to log outgoing requests in example
 For higher GitHub rate limits, provide a token:
 
 ```php
-// Via environment variable
-$_ENV['GITHUB_TOKEN'] = 'ghp_your_token_here';
+use PackApi\Inspector\PackageInspectorFacade;
 
-// Pass the token to GitHubProviderFactory when creating providers
-// $github = new GitHubProviderFactory($httpFactory, $_ENV['GITHUB_TOKEN'] ?? null);
+$inspector = PackageInspectorFacade::defaults(
+    githubToken: getenv('GITHUB_TOKEN') ?: null,
+);
 ```
+
+Without an explicit token, the default builder reads `GITHUB_TOKEN` from the environment.
 
 ## Architecture
 

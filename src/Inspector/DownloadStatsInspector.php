@@ -35,7 +35,10 @@ final class DownloadStatsInspector implements DownloadStatsInspectorInterface
     {
         foreach ($this->providers as $provider) {
             if ($provider->supports($package)) {
-                return $provider->getStats($package);
+                $stats = $provider->getStats($package);
+                if (null !== $stats) {
+                    return $stats;
+                }
             }
         }
 
@@ -49,7 +52,10 @@ final class DownloadStatsInspector implements DownloadStatsInspectorInterface
     {
         foreach ($this->providers as $provider) {
             if ($provider->supports($package)) {
-                return $provider->getStatsForPeriod($package, $period);
+                $stats = $provider->getStatsForPeriod($package, $period);
+                if (null !== $stats) {
+                    return $stats;
+                }
             }
         }
 

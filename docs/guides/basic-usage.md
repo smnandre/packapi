@@ -1,49 +1,98 @@
-# Basic Usage Guide
+# Basic usage
 
-## Quick Start
+## Overview
 
-### First Steps
-### Simple Example
-### Basic Analysis
+PackApi can inspect Composer, NPM, and GitHub-hosted Swift packages through one configured facade. Start with the default preset. Add individual providers only when your application needs different ordering or a private data source.
 
-## Core Concepts
+## Inspect a package
 
-### Packages
-### Providers
-### Inspectors
+```php
+use PackApi\Inspector\PackageInspectorFacade;
+use PackApi\Package\ComposerPackage;
 
-## Creating Packages
+$inspector = PackageInspectorFacade::defaults();
+$report = $inspector->inspect(new ComposerPackage('symfony/console'));
+```
 
-### Composer Package
-### NPM Package
-### Package Validation
+`inspect()` requests metadata first. When metadata contains a GitHub repository, the facade attaches it to the package before requesting content, activity, and security data.
 
-## Using Inspectors
+## Read the report
 
-### Metadata Inspector
-### Download Stats Inspector
-### Content Inspector
+Detailed results remain typed and nullable:
 
-## Facade Usage
+```php
+echo $report->metadata?->name ?? 'Unknown';
+echo $report->downloads?->get('monthly')?->getCount() ?? 0;
+echo $report->quality?->score ?? 0;
 
-### Package Inspector Facade
-### Single Entry Point
-### Simplified API
+foreach ($report->securityAdvisories ?? [] as $advisory) {
+    echo $advisory->severity.': '.$advisory->title;
+}
+```
 
-## Common Patterns
+Use the convenience methods for common application decisions:
 
-### Error Handling
-### Result Processing
-### Multiple Packages
+```php
+if (!$report->isComplete()) {
+    echo 'Missing: '.implode(', ', $report->getMissingSections());
+}
 
-## Configuration
+if ($report->hasSecurityAdvisories()) {
+    echo $report->getSecurityAdvisoryCount().' advisories';
+}
 
-### Provider Configuration
-### Cache Setup
-### Logging
+$summary = $report->getSummary();
+```
 
-## Best Practices
+The summary contains identifiers, repository URL, available and missing sections, monthly downloads, advisory count, quality result, and last commit date. It does not discard the detailed model objects stored on the report.
 
-### Resource Management
-### Error Handling
-### Performance Tips
+## Other package types
+
+```php
+use PackApi\Package\NpmPackage;
+use PackApi\Package\SwiftPackage;
+
+$npm = $inspector->inspect(new NpmPackage('@playwright/test'));
+$swift = $inspector->inspect(new SwiftPackage('Alamofire', 'Alamofire'));
+```
+
+## GitHub authentication
+
+The default builder reads `GITHUB_TOKEN` from the environment. You can also pass it explicitly:
+
+```php
+$inspector = PackageInspectorFacade::defaults(
+    githubToken: getenv('GITHUB_TOKEN') ?: null,
+);
+```
+
+## Add a custom provider
+
+Custom providers run before the defaults:
+
+```php
+$inspector = PackageInspectorFacade::builder()
+    ->withMetadataProvider($metadataProvider)
+    ->withSecurityProvider($securityProvider)
+    ->build();
+```
+
+The builder is immutable, so presets can be shared safely:
+
+```php
+$defaults = PackageInspectorFacade::builder();
+$internal = $defaults->withMetadataProvider($internalMetadata);
+
+$publicInspector = $defaults->build();
+$internalInspector = $internal->build();
+```
+
+## Legacy array result
+
+`analyze()` remains available for existing applications:
+
+```php
+$result = $inspector->analyze(new ComposerPackage('symfony/console'));
+```
+
+New code should use `inspect()` because `PackageReport` preserves types and distinguishes unavailable sections from empty results.
