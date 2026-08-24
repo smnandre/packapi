@@ -17,6 +17,9 @@ use PackApi\Model\SecurityAdvisory;
 use PackApi\Package\Package;
 use PackApi\Provider\SecurityProviderInterface;
 
+/**
+ * @author Simon André <smn.andre@gmail.com>
+ */
 final class SecurityInspector implements SecurityInspectorInterface
 {
     /**

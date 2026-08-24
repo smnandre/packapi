@@ -19,6 +19,9 @@ use PackApi\Model\DownloadStats;
 use PackApi\Package\Package;
 use PackApi\Provider\DownloadStatsProviderInterface;
 
+/**
+ * @author Simon André <smn.andre@gmail.com>
+ */
 final class GitHubStatisticProvider implements DownloadStatsProviderInterface
 {
     public function __construct(
@@ -71,9 +74,6 @@ final class GitHubStatisticProvider implements DownloadStatsProviderInterface
             if (!$activityData) {
                 return null;
             }
-
-            // Map GitHub stats to download-like metrics
-            $stats = $activityData['activity_stats'];
 
             $count = (int) ($repoData['stargazers_count'] ?? 0);
             $computedPeriod = new DownloadPeriod(

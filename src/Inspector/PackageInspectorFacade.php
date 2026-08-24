@@ -15,6 +15,9 @@ namespace PackApi\Inspector;
 
 use PackApi\Package\Package;
 
+/**
+ * @author Simon André <smn.andre@gmail.com>
+ */
 final class PackageInspectorFacade
 {
     public function __construct(

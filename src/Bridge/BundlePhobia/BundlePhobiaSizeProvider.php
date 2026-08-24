@@ -18,6 +18,9 @@ use PackApi\Package\NpmPackage;
 use PackApi\Package\Package;
 use PackApi\Provider\BundleSizeProviderInterface;
 
+/**
+ * @author Simon André <smn.andre@gmail.com>
+ */
 final class BundlePhobiaSizeProvider implements BundleSizeProviderInterface
 {
     public function __construct(private readonly BundlePhobiaApiClient $client)
@@ -73,7 +76,7 @@ final class BundlePhobiaSizeProvider implements BundleSizeProviderInterface
 
         try {
             return $this->client->getPackageHistory($package->getName());
-        } catch (\Exception $e) {
+        } catch (\Exception) {
             return null;
         }
     }

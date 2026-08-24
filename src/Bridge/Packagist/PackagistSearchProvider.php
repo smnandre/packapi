@@ -15,6 +15,9 @@ namespace PackApi\Bridge\Packagist;
 
 use PackApi\Provider\PackageSearchInterface;
 
+/**
+ * @author Simon André <smn.andre@gmail.com>
+ */
 final class PackagistSearchProvider implements PackageSearchInterface
 {
     public function __construct(private readonly PackagistApiClient $client)

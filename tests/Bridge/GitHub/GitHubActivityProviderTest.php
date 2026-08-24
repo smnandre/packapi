@@ -102,6 +102,8 @@ final class GitHubActivityProviderTest extends TestCase
         $pkg3 = new ComposerPackage('acme/foo');
         $pkg3->setRepositoryUrl('https://gitlab.com/acme/foo');
         $this->assertFalse($provider->supports($pkg3));
+
+        $this->assertFalse($provider->supports(new ComposerPackage('invalid')));
     }
 
     public function testGetActivitySummaryReturnsData(): void
@@ -124,5 +126,43 @@ final class GitHubActivityProviderTest extends TestCase
         $this->assertSame(2, $summary->getContributors());
         $this->assertSame(5, $summary->getOpenIssues());
         $this->assertSame('2024-06-02T00:00:00Z', $summary->getLastRelease());
+    }
+
+    public function testGetActivitySummaryReturnsNullWithoutRepository(): void
+    {
+        $provider = new GitHubActivityProvider(new GitHubApiClient($this->getStubClient()));
+
+        $this->assertNull($provider->getActivitySummary(new ComposerPackage('owner/repo')));
+    }
+
+    public function testGetActivitySummaryReturnsNullForInvalidRepositoryUrl(): void
+    {
+        $provider = new GitHubActivityProvider(new GitHubApiClient($this->getStubClient()));
+        $package = new ComposerPackage('owner/repo');
+        $package->setRepositoryUrl('not-a-repository');
+
+        $this->assertNull($provider->getActivitySummary($package));
+    }
+
+    public function testGetActivitySummaryReturnsNullWhenActivityIsUnavailable(): void
+    {
+        $provider = new GitHubActivityProvider(new GitHubApiClient($this->getStubClient([
+            'GET /repos/owner/repo' => [404, ['message' => 'Not Found']],
+        ])));
+        $package = new ComposerPackage('owner/repo');
+        $package->setRepositoryUrl('https://github.com/owner/repo');
+
+        $this->assertNull($provider->getActivitySummary($package));
+    }
+
+    public function testGetActivitySummaryReturnsNullOnApiFailure(): void
+    {
+        $provider = new GitHubActivityProvider(new GitHubApiClient($this->getStubClient([
+            'GET /repos/owner/repo' => [500, ['message' => 'Unavailable']],
+        ])));
+        $package = new ComposerPackage('owner/repo');
+        $package->setRepositoryUrl('https://github.com/owner/repo');
+
+        $this->assertNull($provider->getActivitySummary($package));
     }
 }

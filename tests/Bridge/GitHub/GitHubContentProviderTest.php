@@ -25,6 +25,18 @@ use Symfony\Component\HttpClient\Response\MockResponse;
 #[CoversClass(GitHubContentProvider::class)]
 final class GitHubContentProviderTest extends TestCase
 {
+    public function testSupportsOnlyGitHubRepositories(): void
+    {
+        $provider = new GitHubContentProvider(new GitHubApiClient(new MockHttpClient()));
+        $package = new ComposerPackage('owner/repo');
+
+        $this->assertFalse($provider->supports($package));
+        $package->setRepositoryUrl('https://gitlab.com/owner/repo');
+        $this->assertFalse($provider->supports($package));
+        $package->setRepositoryUrl('https://github.com/owner/repo');
+        $this->assertTrue($provider->supports($package));
+    }
+
     public function testGetContentOverviewBuildsModel(): void
     {
         $responses = [
@@ -53,5 +65,43 @@ final class GitHubContentProviderTest extends TestCase
         $this->assertTrue($overview->hasReadme());
         $this->assertTrue($overview->hasLicense());
         $this->assertTrue($overview->hasGitignore());
+    }
+
+    public function testGetContentOverviewReturnsNullWithoutRepository(): void
+    {
+        $provider = new GitHubContentProvider(new GitHubApiClient(new MockHttpClient()));
+
+        $this->assertNull($provider->getContentOverview(new ComposerPackage('owner/repo')));
+    }
+
+    public function testGetContentOverviewReturnsNullForInvalidRepositoryUrl(): void
+    {
+        $provider = new GitHubContentProvider(new GitHubApiClient(new MockHttpClient()));
+        $package = new ComposerPackage('owner/repo');
+        $package->setRepositoryUrl('not-a-repository');
+
+        $this->assertNull($provider->getContentOverview($package));
+    }
+
+    public function testGetContentOverviewReturnsNullWhenRepositoryIsMissing(): void
+    {
+        $provider = new GitHubContentProvider(new GitHubApiClient(new MockHttpClient([
+            new MockResponse('', ['http_code' => 404]),
+        ])));
+        $package = new ComposerPackage('owner/repo');
+        $package->setRepositoryUrl('https://github.com/owner/repo');
+
+        $this->assertNull($provider->getContentOverview($package));
+    }
+
+    public function testGetContentOverviewReturnsNullOnApiFailure(): void
+    {
+        $provider = new GitHubContentProvider(new GitHubApiClient(new MockHttpClient([
+            new MockResponse('', ['http_code' => 500]),
+        ])));
+        $package = new ComposerPackage('owner/repo');
+        $package->setRepositoryUrl('https://github.com/owner/repo');
+
+        $this->assertNull($provider->getContentOverview($package));
     }
 }

@@ -21,6 +21,8 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 /**
  * HTTP client factory that creates a decorated client with caching and logging middleware.
+ *
+ * @author Simon André <smn.andre@gmail.com>
  */
 final class HttpClientFactory implements HttpClientFactoryInterface
 {

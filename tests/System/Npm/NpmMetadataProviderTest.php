@@ -30,6 +30,12 @@ final class NpmMetadataProviderTest extends TestCase
 
     protected function setUp(): void
     {
+        $this->npmApiClient = $this->createStub(NpmApiClient::class);
+        $this->provider = new NpmMetadataProvider($this->npmApiClient);
+    }
+
+    private function useMockApiClient(): void
+    {
         $this->npmApiClient = $this->createMock(NpmApiClient::class);
         $this->provider = new NpmMetadataProvider($this->npmApiClient);
     }
@@ -51,6 +57,7 @@ final class NpmMetadataProviderTest extends TestCase
     public function testGetMetadataReturnsNullWhenApiClientReturnsNull(): void
     {
         $package = new NpmPackage('test-package');
+        $this->useMockApiClient();
 
         $this->npmApiClient
             ->expects($this->once())
@@ -66,6 +73,7 @@ final class NpmMetadataProviderTest extends TestCase
     public function testGetMetadataReturnsMetadataWithAllFields(): void
     {
         $package = new NpmPackage('test-package');
+        $this->useMockApiClient();
         $apiData = [
             'name' => 'test-package',
             'description' => 'A test package',
@@ -93,6 +101,7 @@ final class NpmMetadataProviderTest extends TestCase
     public function testGetMetadataHandlesMissingFields(): void
     {
         $package = new NpmPackage('test-package');
+        $this->useMockApiClient();
         $apiData = [
             'name' => 'test-package',
         ];
@@ -115,6 +124,7 @@ final class NpmMetadataProviderTest extends TestCase
     public function testGetMetadataHandlesStringRepository(): void
     {
         $package = new NpmPackage('test-package');
+        $this->useMockApiClient();
         $apiData = [
             'name' => 'test-package',
             'repository' => 'https://github.com/user/repo.git',
@@ -134,6 +144,7 @@ final class NpmMetadataProviderTest extends TestCase
     public function testGetMetadataHandlesObjectLicense(): void
     {
         $package = new NpmPackage('test-package');
+        $this->useMockApiClient();
         $apiData = [
             'name' => 'test-package',
             'license' => [
@@ -155,6 +166,7 @@ final class NpmMetadataProviderTest extends TestCase
     public function testGetMetadataFallsBackToPackageNameWhenNameMissing(): void
     {
         $package = new NpmPackage('test-package');
+        $this->useMockApiClient();
         $apiData = [];
 
         $this->npmApiClient

@@ -25,10 +25,10 @@ final class PackagistApiClientTest extends TestCase
         $data = ['package' => ['downloads' => ['monthly' => 5]]];
         $json = json_encode($data, JSON_THROW_ON_ERROR);
 
-        $response = $this->createMock(ResponseInterface::class);
-        $response->method('getContent')->with(false)->willReturn($json);
+        $response = $this->createStub(ResponseInterface::class);
+        $response->method('getContent')->willReturn($json);
 
-        $http = $this->createMock(HttpClientInterface::class);
+        $http = $this->createStub(HttpClientInterface::class);
         $http->method('request')->willReturn($response);
 
         $client = new PackagistApiClient($http);
@@ -46,10 +46,10 @@ final class PackagistApiClientTest extends TestCase
         $data = ['downloads' => $downloads];
         $json = json_encode($data, JSON_THROW_ON_ERROR);
 
-        $response = $this->createMock(ResponseInterface::class);
-        $response->method('getContent')->with(false)->willReturn($json);
+        $response = $this->createStub(ResponseInterface::class);
+        $response->method('getContent')->willReturn($json);
 
-        $http = $this->createMock(HttpClientInterface::class);
+        $http = $this->createStub(HttpClientInterface::class);
         $http->method('request')->willReturn($response);
 
         $client = new PackagistApiClient($http);

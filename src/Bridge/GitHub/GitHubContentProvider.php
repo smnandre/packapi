@@ -18,6 +18,9 @@ use PackApi\Model\File;
 use PackApi\Package\Package;
 use PackApi\Provider\ContentProviderInterface;
 
+/**
+ * @author Simon André <smn.andre@gmail.com>
+ */
 final class GitHubContentProvider implements ContentProviderInterface
 {
     public function __construct(private GitHubApiClient $client)

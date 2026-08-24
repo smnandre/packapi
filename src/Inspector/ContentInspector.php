@@ -17,6 +17,9 @@ use PackApi\Model\ContentOverview;
 use PackApi\Package\Package;
 use PackApi\Provider\ContentProviderInterface;
 
+/**
+ * @author Simon André <smn.andre@gmail.com>
+ */
 final class ContentInspector implements ContentInspectorInterface
 {
     /**

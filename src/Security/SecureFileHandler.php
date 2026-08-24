@@ -17,6 +17,9 @@ use PackApi\Exception\ValidationException;
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
+/**
+ * @author Simon André <smn.andre@gmail.com>
+ */
 final class SecureFileHandler implements SecureFileHandlerInterface
 {
     public const int MAX_FILE_SIZE = 104857600; // 100MB

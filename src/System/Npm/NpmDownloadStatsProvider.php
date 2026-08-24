@@ -20,6 +20,9 @@ use PackApi\Package\NpmPackage;
 use PackApi\Package\Package;
 use PackApi\Provider\DownloadStatsProviderInterface;
 
+/**
+ * @author Simon André <smn.andre@gmail.com>
+ */
 final class NpmDownloadStatsProvider implements DownloadStatsProviderInterface
 {
     public function __construct(private readonly NpmApiClient $client)

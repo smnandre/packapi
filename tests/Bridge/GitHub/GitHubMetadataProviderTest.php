@@ -56,10 +56,47 @@ final class GitHubMetadataProviderTest extends TestCase
         $provider = new GitHubMetadataProvider($client);
         $package = new ComposerPackage('owner/repo');
 
+        $this->assertFalse($provider->supports($package));
         $package->setRepositoryUrl('https://example.com/owner/repo');
         $this->assertFalse($provider->supports($package));
 
         $package->setRepositoryUrl('https://github.com/owner/repo');
         $this->assertTrue($provider->supports($package));
+    }
+
+    public function testGetMetadataReturnsNullWithoutRepository(): void
+    {
+        $provider = new GitHubMetadataProvider(new GitHubApiClient(new MockHttpClient()));
+
+        $this->assertNull($provider->getMetadata(new ComposerPackage('owner/repo')));
+    }
+
+    public function testGetMetadataReturnsNullForInvalidRepositoryUrl(): void
+    {
+        $provider = new GitHubMetadataProvider(new GitHubApiClient(new MockHttpClient()));
+        $package = new ComposerPackage('owner/repo');
+        $package->setRepositoryUrl('not-a-repository');
+
+        $this->assertNull($provider->getMetadata($package));
+    }
+
+    public function testGetMetadataReturnsNullWhenRepositoryIsMissing(): void
+    {
+        $provider = new GitHubMetadataProvider(new GitHubApiClient(new MockHttpClient([
+            new MockResponse('', ['http_code' => 404]),
+        ])));
+        $package = new ComposerPackage('owner/repo');
+        $package->setRepositoryUrl('https://github.com/owner/repo');
+
+        $this->assertNull($provider->getMetadata($package));
+    }
+
+    public function testGetMetadataReturnsNullForMalformedGitHubRepository(): void
+    {
+        $provider = new GitHubMetadataProvider(new GitHubApiClient(new MockHttpClient()));
+        $package = new ComposerPackage('owner/repo');
+        $package->setRepositoryUrl('https://github.com/owner!/repo');
+
+        $this->assertNull($provider->getMetadata($package));
     }
 }

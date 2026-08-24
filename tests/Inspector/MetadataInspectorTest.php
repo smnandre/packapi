@@ -26,7 +26,7 @@ final class MetadataInspectorTest extends TestCase
     public function testGetMetadataReturnsNullWhenNoProviderSupports(): void
     {
         $package = $this->createStub(Package::class);
-        $provider = $this->createMock(MetadataProviderInterface::class);
+        $provider = $this->createStub(MetadataProviderInterface::class);
         $provider->method('supports')->willReturn(false);
 
         $inspector = new MetadataInspector([$provider]);
@@ -39,7 +39,7 @@ final class MetadataInspectorTest extends TestCase
         $package = $this->createStub(Package::class);
         $expectedMetadata = new Metadata('test', 'test', 'test', 'test');
 
-        $provider = $this->createMock(MetadataProviderInterface::class);
+        $provider = $this->createStub(MetadataProviderInterface::class);
         $provider->method('supports')->willReturn(true);
         $provider->method('getMetadata')->willReturn($expectedMetadata);
 
@@ -52,7 +52,7 @@ final class MetadataInspectorTest extends TestCase
     {
         $package = $this->createStub(Package::class);
 
-        $provider = $this->createMock(MetadataProviderInterface::class);
+        $provider = $this->createStub(MetadataProviderInterface::class);
         $provider->method('supports')->willReturn(true);
         $provider->method('getMetadata')->willReturn(null);
 

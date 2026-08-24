@@ -137,4 +137,9 @@ final class PackagistActivityProviderTest extends TestCase
         $this->assertSame(0, $summary->getContributors());
         $this->assertSame(0, $summary->getOpenIssues());
     }
+
+    public function testGetActivitySummaryReturnsNullWithoutPackageData(): void
+    {
+        $this->assertNull($this->provider->getActivitySummary(new ComposerPackage('vendor/package')));
+    }
 }

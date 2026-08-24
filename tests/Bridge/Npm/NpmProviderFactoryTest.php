@@ -29,7 +29,7 @@ final class NpmProviderFactoryTest extends TestCase
 {
     public function testProvidesReturnsExpectedInterfaces(): void
     {
-        $httpClientFactory = $this->createMock(HttpClientFactoryInterface::class);
+        $httpClientFactory = $this->createStub(HttpClientFactoryInterface::class);
         $factory = new NpmProviderFactory($httpClientFactory);
 
         $result = $factory->provides();
@@ -43,7 +43,7 @@ final class NpmProviderFactoryTest extends TestCase
 
     public function testCreateThrowsLogicExceptionForUnsupportedInterface(): void
     {
-        $httpClientFactory = $this->createMock(HttpClientFactoryInterface::class);
+        $httpClientFactory = $this->createStub(HttpClientFactoryInterface::class);
         $factory = new NpmProviderFactory($httpClientFactory);
 
         $this->expectException(\LogicException::class);
@@ -54,7 +54,7 @@ final class NpmProviderFactoryTest extends TestCase
 
     public function testCreateMetadataProviderReturnsInstance(): void
     {
-        $httpClientFactory = $this->createMock(HttpClientFactoryInterface::class);
+        $httpClientFactory = $this->createStub(HttpClientFactoryInterface::class);
         $factory = new NpmProviderFactory($httpClientFactory);
 
         $result = $factory->create(MetadataProviderInterface::class);
@@ -64,7 +64,7 @@ final class NpmProviderFactoryTest extends TestCase
 
     public function testCreateDownloadStatsProviderReturnsInstance(): void
     {
-        $httpClientFactory = $this->createMock(HttpClientFactoryInterface::class);
+        $httpClientFactory = $this->createStub(HttpClientFactoryInterface::class);
         $factory = new NpmProviderFactory($httpClientFactory);
 
         $result = $factory->create(DownloadStatsProviderInterface::class);
@@ -74,7 +74,7 @@ final class NpmProviderFactoryTest extends TestCase
 
     public function testCreateContentProviderReturnsInstance(): void
     {
-        $httpClientFactory = $this->createMock(HttpClientFactoryInterface::class);
+        $httpClientFactory = $this->createStub(HttpClientFactoryInterface::class);
         $factory = new NpmProviderFactory($httpClientFactory);
 
         $result = $factory->create(ContentProviderInterface::class);

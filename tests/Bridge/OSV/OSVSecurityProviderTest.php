@@ -18,6 +18,7 @@ use PackApi\Bridge\OSV\OSVSecurityProvider;
 use PackApi\Model\SecurityAdvisory;
 use PackApi\Package\ComposerPackage;
 use PackApi\Package\NpmPackage;
+use PackApi\Package\Package;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -29,6 +30,12 @@ final class OSVSecurityProviderTest extends TestCase
     private OSVSecurityProvider $provider;
 
     protected function setUp(): void
+    {
+        $this->osvApiClient = $this->createStub(OSVApiClient::class);
+        $this->provider = new OSVSecurityProvider($this->osvApiClient);
+    }
+
+    private function useMockApiClient(): void
     {
         $this->osvApiClient = $this->createMock(OSVApiClient::class);
         $this->provider = new OSVSecurityProvider($this->osvApiClient);
@@ -48,9 +55,19 @@ final class OSVSecurityProviderTest extends TestCase
         $this->assertTrue($this->provider->supports($package));
     }
 
+    public function testUnsupportedPackageReturnsNoAdvisories(): void
+    {
+        $package = new class('other', 'other') extends Package {};
+
+        $this->assertFalse($this->provider->supports($package));
+        $this->assertSame([], $this->provider->getSecurityAdvisories($package));
+        $this->assertNull($this->provider->getSecurityAdvisoriesForVersion($package, '1.0.0'));
+    }
+
     public function testGetSecurityAdvisoriesReturnsEmptyArrayWhenNoVulnerabilities(): void
     {
         $package = new NpmPackage('test-package');
+        $this->useMockApiClient();
 
         $this->osvApiClient
             ->expects($this->once())
@@ -66,6 +83,7 @@ final class OSVSecurityProviderTest extends TestCase
     public function testGetSecurityAdvisoriesReturnsNullWhenApiReturnsNull(): void
     {
         $package = new NpmPackage('test-package');
+        $this->useMockApiClient();
 
         $this->osvApiClient
             ->expects($this->once())
@@ -99,6 +117,7 @@ final class OSVSecurityProviderTest extends TestCase
                 ],
             ],
         ];
+        $this->useMockApiClient();
 
         $this->osvApiClient
             ->expects($this->once())
@@ -123,6 +142,7 @@ final class OSVSecurityProviderTest extends TestCase
     {
         $package = new NpmPackage('test-package');
         $version = '1.0.0';
+        $this->useMockApiClient();
 
         $this->osvApiClient
             ->expects($this->once())
@@ -133,6 +153,43 @@ final class OSVSecurityProviderTest extends TestCase
         $result = $this->provider->getSecurityAdvisoriesForVersion($package, $version);
 
         $this->assertSame([], $result);
+    }
+
+    public function testGetSecurityAdvisoriesForVersionMapsAdvisories(): void
+    {
+        $package = new NpmPackage('test-package');
+        $this->useMockApiClient();
+        $this->osvApiClient
+            ->expects($this->once())
+            ->method('queryVulnerabilities')
+            ->with('npm', 'test-package', '1.0.0')
+            ->willReturn(['vulns' => [
+                ['summary' => 'Missing identifier'],
+                ['id' => 'OSV-CRITICAL', 'severity' => [['score' => 9.5]]],
+                ['id' => 'OSV-MEDIUM', 'severity' => [['score' => 5.0]]],
+                ['id' => 'OSV-LOW', 'severity' => [['score' => 2.0]]],
+                ['id' => 'OSV-DEFAULT'],
+            ]]);
+
+        $result = $this->provider->getSecurityAdvisoriesForVersion($package, '1.0.0');
+
+        $this->assertNotNull($result);
+        $this->assertSame(['CRITICAL', 'MEDIUM', 'LOW', 'MEDIUM'], array_map(
+            static fn (SecurityAdvisory $advisory): string => $advisory->getSeverity(),
+            $result,
+        ));
+    }
+
+    public function testGetSecurityAdvisoriesForVersionReturnsNullOnFailure(): void
+    {
+        $package = new NpmPackage('test-package');
+        $this->useMockApiClient();
+        $this->osvApiClient
+            ->expects($this->once())
+            ->method('queryVulnerabilities')
+            ->willThrowException(new \RuntimeException('API error'));
+
+        $this->assertNull($this->provider->getSecurityAdvisoriesForVersion($package, '1.0.0'));
     }
 
     public function testIsVulnerabilityRelevantReturnsTrueWhenPackageMatches(): void
@@ -150,6 +207,7 @@ final class OSVSecurityProviderTest extends TestCase
                 ],
             ],
         ];
+        $this->useMockApiClient();
 
         $this->osvApiClient
             ->expects($this->once())
@@ -177,6 +235,7 @@ final class OSVSecurityProviderTest extends TestCase
                 ],
             ],
         ];
+        $this->useMockApiClient();
 
         $this->osvApiClient
             ->expects($this->once())
@@ -189,6 +248,30 @@ final class OSVSecurityProviderTest extends TestCase
         $this->assertFalse($result);
     }
 
+    public function testIsVulnerabilityRelevantReturnsFalseWithoutAffectedPackages(): void
+    {
+        $package = new NpmPackage('test-package');
+        $this->useMockApiClient();
+        $this->osvApiClient
+            ->expects($this->once())
+            ->method('getVulnerabilityById')
+            ->willReturn(null);
+
+        $this->assertFalse($this->provider->isVulnerabilityRelevant($package, 'OSV-1'));
+    }
+
+    public function testIsVulnerabilityRelevantReturnsFalseOnFailure(): void
+    {
+        $package = new NpmPackage('test-package');
+        $this->useMockApiClient();
+        $this->osvApiClient
+            ->expects($this->once())
+            ->method('getVulnerabilityById')
+            ->willThrowException(new \RuntimeException('API error'));
+
+        $this->assertFalse($this->provider->isVulnerabilityRelevant($package, 'OSV-1'));
+    }
+
     public function testGetVulnerabilityDetailsReturnsData(): void
     {
         $vulnId = 'OSV-2023-1234';
@@ -197,6 +280,7 @@ final class OSVSecurityProviderTest extends TestCase
             'summary' => 'Test vulnerability',
             'details' => 'Detailed description',
         ];
+        $this->useMockApiClient();
 
         $this->osvApiClient
             ->expects($this->once())
@@ -209,9 +293,21 @@ final class OSVSecurityProviderTest extends TestCase
         $this->assertSame($vulnerabilityData, $result);
     }
 
+    public function testGetVulnerabilityDetailsReturnsNullOnFailure(): void
+    {
+        $this->useMockApiClient();
+        $this->osvApiClient
+            ->expects($this->once())
+            ->method('getVulnerabilityById')
+            ->willThrowException(new \RuntimeException('API error'));
+
+        $this->assertNull($this->provider->getVulnerabilityDetails('OSV-1'));
+    }
+
     public function testGetSecurityAdvisoriesHandlesExceptionGracefully(): void
     {
         $package = new NpmPackage('test-package');
+        $this->useMockApiClient();
 
         $this->osvApiClient
             ->expects($this->once())

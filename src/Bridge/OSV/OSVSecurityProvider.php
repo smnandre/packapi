@@ -19,6 +19,9 @@ use PackApi\Package\NpmPackage;
 use PackApi\Package\Package;
 use PackApi\Provider\SecurityProviderInterface;
 
+/**
+ * @author Simon André <smn.andre@gmail.com>
+ */
 final class OSVSecurityProvider implements SecurityProviderInterface
 {
     public function __construct(private readonly OSVApiClient $client)
@@ -153,11 +156,6 @@ final class OSVSecurityProvider implements SecurityProviderInterface
         }
 
         if (isset($vulnerability['database_specific']['severity'])) {
-            return strtoupper($vulnerability['database_specific']['severity']);
-        }
-
-        if (isset($vulnerability['database_specific']['github_reviewed'])
-            && isset($vulnerability['database_specific']['severity'])) {
             return strtoupper($vulnerability['database_specific']['severity']);
         }
 

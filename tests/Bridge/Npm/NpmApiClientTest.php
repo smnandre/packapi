@@ -14,10 +14,13 @@ declare(strict_types=1);
 namespace PackApi\Tests\Bridge\Npm;
 
 use PackApi\Bridge\Npm\NpmApiClient;
+use PackApi\Exception\NetworkException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
+use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 #[CoversClass(NpmApiClient::class)]
 class NpmApiClientTest extends TestCase
@@ -54,14 +57,23 @@ class NpmApiClientTest extends TestCase
 
     public function testFetchPackageInfoThrowsNetworkExceptionOnError(): void
     {
-        $registryClient = new MockHttpClient(function () {
-            throw new \Exception('Network error');
-        });
+        $registryClient = new MockHttpClient(new MockResponse('', ['http_code' => 500]));
         $statsClient = new MockHttpClient();
 
         $client = new NpmApiClient($registryClient, $statsClient);
 
-        $this->expectException(\Exception::class);
+        $this->expectException(NetworkException::class);
+        $client->fetchPackageInfo('example-package');
+    }
+
+    public function testFetchPackageInfoWrapsTransportErrors(): void
+    {
+        $transport = new class extends \RuntimeException implements TransportExceptionInterface {};
+        $registryClient = $this->createStub(HttpClientInterface::class);
+        $registryClient->method('request')->willThrowException($transport);
+        $client = new NpmApiClient($registryClient, new MockHttpClient());
+
+        $this->expectException(NetworkException::class);
         $client->fetchPackageInfo('example-package');
     }
 
@@ -97,14 +109,23 @@ class NpmApiClientTest extends TestCase
 
     public function testFetchDownloadStatsThrowsNetworkExceptionOnError(): void
     {
-        $statsClient = new MockHttpClient(function () {
-            throw new \Exception('Network error');
-        });
+        $statsClient = new MockHttpClient(new MockResponse('', ['http_code' => 500]));
         $registryClient = new MockHttpClient();
 
         $client = new NpmApiClient($registryClient, $statsClient);
 
-        $this->expectException(\Exception::class);
+        $this->expectException(NetworkException::class);
+        $client->fetchDownloadStats('example-package');
+    }
+
+    public function testFetchDownloadStatsWrapsTransportErrors(): void
+    {
+        $transport = new class extends \RuntimeException implements TransportExceptionInterface {};
+        $statsClient = $this->createStub(HttpClientInterface::class);
+        $statsClient->method('request')->willThrowException($transport);
+        $client = new NpmApiClient(new MockHttpClient(), $statsClient);
+
+        $this->expectException(NetworkException::class);
         $client->fetchDownloadStats('example-package');
     }
 }

@@ -18,6 +18,9 @@ use PackApi\Model\DownloadStats;
 use PackApi\Package\Package;
 use PackApi\Provider\DownloadStatsProviderInterface;
 
+/**
+ * @author Simon André <smn.andre@gmail.com>
+ */
 final class DownloadStatsInspector implements DownloadStatsInspectorInterface
 {
     /**

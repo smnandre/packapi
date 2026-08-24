@@ -30,6 +30,12 @@ final class NpmContentProviderTest extends TestCase
 
     protected function setUp(): void
     {
+        $this->npmApiClient = $this->createStub(NpmApiClient::class);
+        $this->provider = new NpmContentProvider($this->npmApiClient);
+    }
+
+    private function useMockApiClient(): void
+    {
         $this->npmApiClient = $this->createMock(NpmApiClient::class);
         $this->provider = new NpmContentProvider($this->npmApiClient);
     }
@@ -51,6 +57,7 @@ final class NpmContentProviderTest extends TestCase
     public function testGetContentOverviewReturnsNullWhenApiClientReturnsNull(): void
     {
         $package = new NpmPackage('test-package');
+        $this->useMockApiClient();
 
         $this->npmApiClient
             ->expects($this->once())
@@ -66,6 +73,7 @@ final class NpmContentProviderTest extends TestCase
     public function testGetContentOverviewReturnsContentOverviewWithBasicInfo(): void
     {
         $package = new NpmPackage('test-package');
+        $this->useMockApiClient();
         $apiData = [
             'name' => 'test-package',
             'dist' => [
@@ -93,6 +101,7 @@ final class NpmContentProviderTest extends TestCase
     public function testGetContentOverviewDetectsReadme(): void
     {
         $package = new NpmPackage('test-package');
+        $this->useMockApiClient();
         $apiData = [
             'name' => 'test-package',
             'readme' => '# Test Package\n\nThis is a test package.',
@@ -112,6 +121,7 @@ final class NpmContentProviderTest extends TestCase
     public function testGetContentOverviewDetectsLicense(): void
     {
         $package = new NpmPackage('test-package');
+        $this->useMockApiClient();
         $apiData = [
             'name' => 'test-package',
             'license' => 'MIT',
@@ -131,6 +141,7 @@ final class NpmContentProviderTest extends TestCase
     public function testGetContentOverviewDetectsTestsFromScripts(): void
     {
         $package = new NpmPackage('test-package');
+        $this->useMockApiClient();
         $apiData = [
             'name' => 'test-package',
             'scripts' => [
@@ -153,6 +164,7 @@ final class NpmContentProviderTest extends TestCase
     public function testGetContentOverviewDetectsTestsFromDevDependencies(): void
     {
         $package = new NpmPackage('test-package');
+        $this->useMockApiClient();
         $apiData = [
             'name' => 'test-package',
             'devDependencies' => [
@@ -204,6 +216,7 @@ final class NpmContentProviderTest extends TestCase
     public function testGetContentOverviewHandlesEmptyData(): void
     {
         $package = new NpmPackage('test-package');
+        $this->useMockApiClient();
         $apiData = [];
 
         $this->npmApiClient

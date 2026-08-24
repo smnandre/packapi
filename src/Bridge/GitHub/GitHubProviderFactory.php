@@ -15,6 +15,9 @@ namespace PackApi\Bridge\GitHub;
 
 use PackApi\Http\HttpClientFactoryInterface;
 
+/**
+ * @author Simon André <smn.andre@gmail.com>
+ */
 final class GitHubProviderFactory
 {
     private readonly GitHubApiClient $apiClient;

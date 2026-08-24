@@ -19,6 +19,8 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
+use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 #[CoversClass(BundlePhobiaApiClient::class)]
 final class BundlePhobiaApiClientTest extends TestCase
@@ -102,6 +104,17 @@ final class BundlePhobiaApiClientTest extends TestCase
         $this->assertSame($responseData, $result);
     }
 
+    public function testGetBundleSizeWrapsTransportErrors(): void
+    {
+        $transport = new class extends \RuntimeException implements TransportExceptionInterface {};
+        $http = $this->createStub(HttpClientInterface::class);
+        $http->method('request')->willThrowException($transport);
+        $client = new BundlePhobiaApiClient($http);
+
+        $this->expectException(NetworkException::class);
+        $client->getBundleSize('react');
+    }
+
     public function testGetPackageHistoryReturnsData(): void
     {
         $responseData = [
@@ -133,5 +146,26 @@ final class BundlePhobiaApiClientTest extends TestCase
         $result = $this->client->getPackageHistory('nonexistent-package');
 
         $this->assertNull($result);
+    }
+
+    public function testGetPackageHistoryThrowsNetworkExceptionOnError(): void
+    {
+        $client = new BundlePhobiaApiClient(new MockHttpClient([
+            new MockResponse('', ['http_code' => 500]),
+        ]));
+
+        $this->expectException(NetworkException::class);
+        $client->getPackageHistory('react');
+    }
+
+    public function testGetPackageHistoryWrapsTransportErrors(): void
+    {
+        $transport = new class extends \RuntimeException implements TransportExceptionInterface {};
+        $http = $this->createStub(HttpClientInterface::class);
+        $http->method('request')->willThrowException($transport);
+        $client = new BundlePhobiaApiClient($http);
+
+        $this->expectException(NetworkException::class);
+        $client->getPackageHistory('react');
     }
 }

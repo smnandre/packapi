@@ -19,6 +19,9 @@ use PackApi\Package\Package;
 use PackApi\Provider\SecurityProviderInterface;
 use Symfony\Component\Yaml\Yaml;
 
+/**
+ * @author Simon André <smn.andre@gmail.com>
+ */
 final class PackagistSecurityProvider implements SecurityProviderInterface
 {
     public function __construct(

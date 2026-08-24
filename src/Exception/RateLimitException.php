@@ -13,6 +13,9 @@ declare(strict_types=1);
 
 namespace PackApi\Exception;
 
+/**
+ * @author Simon André <smn.andre@gmail.com>
+ */
 class RateLimitException extends \Exception implements ProviderExceptionInterface
 {
 }

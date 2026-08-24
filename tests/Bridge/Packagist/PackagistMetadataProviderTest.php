@@ -131,4 +131,9 @@ final class PackagistMetadataProviderTest extends TestCase
         $this->assertSame('MIT', $metadata->license);
         $this->assertSame('https://example.com/vendor/package', $metadata->repository);
     }
+
+    public function testGetMetadataReturnsNullWithoutPackageData(): void
+    {
+        $this->assertNull($this->provider->getMetadata(new ComposerPackage('vendor/package')));
+    }
 }

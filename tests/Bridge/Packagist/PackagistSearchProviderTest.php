@@ -109,4 +109,23 @@ final class PackagistSearchProviderTest extends TestCase
         $this->assertSame('desc', $results[0]['description']);
         $this->assertSame('https://example.com/vendor/package', $results[0]['repository']);
     }
+
+    public function testSearchByKeywordDelegatesToSearch(): void
+    {
+        $client = new PackagistApiClient($this->getStubClient([
+            'GET search.json' => [200, ['results' => [[
+                'name' => 'vendor/package',
+            ]]]],
+        ]));
+        $provider = new PackagistSearchProvider($client);
+
+        $this->assertSame('vendor/package', $provider->searchByKeyword('vendor')[0]['identifier']);
+    }
+
+    public function testGetPopularReturnsEmptyArray(): void
+    {
+        $provider = new PackagistSearchProvider(new PackagistApiClient($this->getStubClient()));
+
+        $this->assertSame([], $provider->getPopular());
+    }
 }

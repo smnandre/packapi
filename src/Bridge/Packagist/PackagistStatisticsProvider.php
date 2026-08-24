@@ -13,6 +13,9 @@ declare(strict_types=1);
 
 namespace PackApi\Bridge\Packagist;
 
+/**
+ * @author Simon André <smn.andre@gmail.com>
+ */
 final class PackagistStatisticsProvider
 {
 }

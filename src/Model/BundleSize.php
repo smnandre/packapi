@@ -13,6 +13,9 @@ declare(strict_types=1);
 
 namespace PackApi\Model;
 
+/**
+ * @author Simon André <smn.andre@gmail.com>
+ */
 final class BundleSize
 {
     public function __construct(
@@ -117,7 +120,7 @@ final class BundleSize
 
         $units = ['B', 'KB', 'MB', 'GB'];
         $base = 1024;
-        $exp = floor(log($bytes) / log($base));
+        $exp = (int) floor(log($bytes) / log($base));
 
         return round($bytes / pow($base, $exp), 1).' '.$units[$exp];
     }

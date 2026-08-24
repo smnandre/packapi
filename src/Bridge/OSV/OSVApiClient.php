@@ -17,6 +17,9 @@ use PackApi\Exception\NetworkException;
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
+/**
+ * @author Simon André <smn.andre@gmail.com>
+ */
 class OSVApiClient
 {
     public function __construct(

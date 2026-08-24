@@ -15,6 +15,9 @@ namespace PackApi\Bridge\GitHub;
 
 use PackApi\Provider\PackageSearchInterface;
 
+/**
+ * @author Simon André <smn.andre@gmail.com>
+ */
 final class GitHubSearchProvider implements PackageSearchInterface
 {
     public function __construct(private readonly GitHubApiClient $client)

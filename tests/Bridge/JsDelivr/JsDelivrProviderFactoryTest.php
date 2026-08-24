@@ -21,7 +21,6 @@ use PackApi\Bridge\JsDelivr\JsDelivrStatsProvider;
 use PackApi\Http\HttpClientFactoryInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 #[CoversClass(JsDelivrProviderFactory::class)]
@@ -30,8 +29,7 @@ final class JsDelivrProviderFactoryTest extends TestCase
     public function testFactoryCreatesProvidersAndApiClient(): void
     {
         $httpFactory = $this->createMock(HttpClientFactoryInterface::class);
-        $client = new MockHttpClient();
-        $scoped = $this->createMock(HttpClientInterface::class);
+        $scoped = $this->createStub(HttpClientInterface::class);
         $scoped->method('withOptions')->willReturnSelf();
         $httpFactory->expects($this->once())->method('createClient')->willReturn($scoped);
 
