@@ -82,4 +82,33 @@ final class GitHubSearchProviderTest extends TestCase
             ],
         ], $result);
     }
+
+    public function testGetPopularMapsRepositoriesSortedByStars(): void
+    {
+        $responses = [
+            new MockResponse(json_encode([
+                'items' => [
+                    [
+                        'full_name' => 'popular/project',
+                        'name' => 'project',
+                        'description' => 'Popular project',
+                        'html_url' => 'https://github.com/popular/project',
+                    ],
+                ],
+            ])),
+        ];
+        $api = new GitHubApiClient(new MockHttpClient($responses));
+        $provider = new GitHubSearchProvider($api);
+
+        $result = $provider->getPopular(1);
+
+        $this->assertSame([
+            [
+                'identifier' => 'popular/project',
+                'name' => 'project',
+                'description' => 'Popular project',
+                'repository' => 'https://github.com/popular/project',
+            ],
+        ], $result);
+    }
 }

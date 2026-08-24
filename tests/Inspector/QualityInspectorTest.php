@@ -92,7 +92,7 @@ final class QualityInspectorTest extends TestCase
 
         $score = $inspector->getQualityScore($package);
         $this->assertNotNull($score);
-        $this->assertSame(63, $score->score);
+        $this->assertSame(73, $score->score);
         $this->assertSame('C', $score->grade);
         $this->assertSame('Average quality, some best practices missing.', $score->comment);
         $this->assertSame([
@@ -126,9 +126,9 @@ final class QualityInspectorTest extends TestCase
 
         $score = $inspector->getQualityScore($package);
         $this->assertNotNull($score);
-        $this->assertSame(85, $score->score);
-        $this->assertSame('B', $score->grade);
-        $this->assertSame('Good, but could be improved (see best practices).', $score->comment);
+        $this->assertSame(100, $score->score);
+        $this->assertSame('A', $score->grade);
+        $this->assertSame('Excellent package hygiene and best practices.', $score->comment);
         $this->assertSame([
             'hasReadme' => true,
             'hasLicense' => true,
@@ -139,5 +139,55 @@ final class QualityInspectorTest extends TestCase
             'hasGitattributes' => true,
             'hasGitignore' => true,
         ], $score->criteria);
+    }
+
+    public function testAssignsBGrade(): void
+    {
+        $score = $this->calculateScore(
+            new ContentOverview(3, 100, true, true, true),
+            new Metadata('pkg', 'Description', 'MIT', 'https://example.com/repo'),
+        );
+
+        $this->assertSame(75, $score->score);
+        $this->assertSame('B', $score->grade);
+        $this->assertSame('Good, but could be improved (see best practices).', $score->comment);
+    }
+
+    public function testAssignsDGrade(): void
+    {
+        $score = $this->calculateScore(
+            new ContentOverview(3, 100, true, true, true),
+            new Metadata('pkg'),
+        );
+
+        $this->assertSame(45, $score->score);
+        $this->assertSame('D', $score->grade);
+        $this->assertSame('Below average, missing key best practices.', $score->comment);
+    }
+
+    public function testAssignsFGrade(): void
+    {
+        $score = $this->calculateScore(
+            new ContentOverview(0, 0),
+            new Metadata('pkg'),
+        );
+
+        $this->assertSame(0, $score->score);
+        $this->assertSame('F', $score->grade);
+        $this->assertSame('Poor quality, needs significant improvement.', $score->comment);
+    }
+
+    private function calculateScore(ContentOverview $content, Metadata $metadata): \PackApi\Model\QualityScore
+    {
+        $package = $this->createStub(Package::class);
+        $contentInspector = $this->createStub(ContentInspectorInterface::class);
+        $contentInspector->method('getContentOverview')->willReturn($content);
+        $metadataInspector = $this->createStub(MetadataInspectorInterface::class);
+        $metadataInspector->method('getMetadata')->willReturn($metadata);
+
+        $score = (new QualityInspector($contentInspector, $metadataInspector))->getQualityScore($package);
+        $this->assertNotNull($score);
+
+        return $score;
     }
 }

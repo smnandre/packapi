@@ -15,6 +15,9 @@ namespace PackApi\Bridge\Packagist;
 
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
+/**
+ * @author Simon André <smn.andre@gmail.com>
+ */
 final class PackagistApiClient
 {
     public function __construct(

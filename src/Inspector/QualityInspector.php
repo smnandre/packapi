@@ -17,6 +17,9 @@ use PackApi\Model\QualityScore;
 use PackApi\Package\Package;
 use PackApi\Provider\ContentProviderInterface;
 
+/**
+ * @author Simon André <smn.andre@gmail.com>
+ */
 final class QualityInspector implements QualityInspectorInterface
 {
     public function __construct(
@@ -48,21 +51,17 @@ final class QualityInspector implements QualityInspectorInterface
             $criteria['hasGitignore'] = (bool) array_filter($bestPractices->ignoredFiles, fn ($f) => '.gitignore' === $f);
         }
 
-        // Improved scoring: each criterion is worth 15 points, minus penalty for ignored files
+        // Each positive criterion is worth 15 points, minus a penalty for ignored files.
         $score = 0;
         $score += $criteria['hasReadme'] ? 15 : 0;
         $score += $criteria['hasLicense'] ? 15 : 0;
         $score += $criteria['hasTests'] ? 15 : 0;
-        $score += $criteria['hasDescription'] ? 10 : 0;
-        $score += $criteria['hasRepository'] ? 10 : 0;
-        $score += ($criteria['hasGitattributes'] ?? false) ? 10 : 0;
-        $score += ($criteria['hasGitignore'] ?? false) ? 10 : 0;
+        $score += $criteria['hasDescription'] ? 15 : 0;
+        $score += $criteria['hasRepository'] ? 15 : 0;
+        $score += ($criteria['hasGitattributes'] ?? false) ? 15 : 0;
+        $score += ($criteria['hasGitignore'] ?? false) ? 15 : 0;
         $score -= min($criteria['ignoredFiles'] * 2, 15); // up to -15 for ignored files
         $score = max(0, min(100, $score));
-
-        $delta = (int) (getenv('PACKAPI_SCORE_DELTA') ?: 0);
-        $score += $delta;
-        $score -= $delta;
 
         $grade = match (true) {
             $score >= 90 => 'A',

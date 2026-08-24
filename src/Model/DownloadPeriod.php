@@ -13,6 +13,9 @@ declare(strict_types=1);
 
 namespace PackApi\Model;
 
+/**
+ * @author Simon André <smn.andre@gmail.com>
+ */
 final class DownloadPeriod
 {
     public function __construct(

@@ -30,6 +30,8 @@ final class GitHubSecurityProviderTest extends TestCase
         $client = new GitHubApiClient(new MockHttpClient());
         $provider = new GitHubSecurityProvider($client);
 
+        $this->assertFalse($provider->supports(new ComposerPackage('owner/repo')));
+
         $pkg = new ComposerPackage('owner/repo');
         $pkg->setRepositoryUrl('https://github.com/owner/repo');
         $this->assertTrue($provider->supports($pkg));
@@ -58,5 +60,56 @@ final class GitHubSecurityProviderTest extends TestCase
         $this->assertCount(1, $result);
         $this->assertInstanceOf(SecurityAdvisory::class, $result[0]);
         $this->assertSame('GHSA-1', $result[0]->getId());
+    }
+
+    public function testGetSecurityAdvisoriesReturnsEmptyWithoutRepository(): void
+    {
+        $provider = new GitHubSecurityProvider(new GitHubApiClient(new MockHttpClient()));
+
+        $this->assertSame([], $provider->getSecurityAdvisories(new ComposerPackage('owner/repo')));
+    }
+
+    public function testGetSecurityAdvisoriesReturnsEmptyForInvalidRepositoryUrl(): void
+    {
+        $provider = new GitHubSecurityProvider(new GitHubApiClient(new MockHttpClient()));
+        $package = new ComposerPackage('owner/repo');
+        $package->setRepositoryUrl('not-a-repository');
+
+        $this->assertSame([], $provider->getSecurityAdvisories($package));
+    }
+
+    public function testGetSecurityAdvisoriesReturnsEmptyWhenRepositoryIsMissing(): void
+    {
+        $provider = new GitHubSecurityProvider(new GitHubApiClient(new MockHttpClient([
+            new MockResponse('', ['http_code' => 404]),
+        ])));
+        $package = new ComposerPackage('owner/repo');
+        $package->setRepositoryUrl('https://github.com/owner/repo');
+
+        $this->assertSame([], $provider->getSecurityAdvisories($package));
+    }
+
+    public function testGetSecurityAdvisoriesReturnsEmptyWithoutAdvisories(): void
+    {
+        $provider = new GitHubSecurityProvider(new GitHubApiClient(new MockHttpClient([
+            new MockResponse('[]'),
+            new MockResponse('[]'),
+            new MockResponse('', ['http_code' => 404]),
+        ])));
+        $package = new ComposerPackage('owner/repo');
+        $package->setRepositoryUrl('https://github.com/owner/repo');
+
+        $this->assertSame([], $provider->getSecurityAdvisories($package));
+    }
+
+    public function testGetSecurityAdvisoriesReturnsEmptyOnApiFailure(): void
+    {
+        $provider = new GitHubSecurityProvider(new GitHubApiClient(new MockHttpClient([
+            new MockResponse('', ['http_code' => 500]),
+        ])));
+        $package = new ComposerPackage('owner/repo');
+        $package->setRepositoryUrl('https://github.com/owner/repo');
+
+        $this->assertSame([], $provider->getSecurityAdvisories($package));
     }
 }

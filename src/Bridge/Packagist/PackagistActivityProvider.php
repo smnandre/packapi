@@ -17,6 +17,9 @@ use PackApi\Model\ActivitySummary;
 use PackApi\Package\Package;
 use PackApi\Provider\ActivityProviderInterface;
 
+/**
+ * @author Simon André <smn.andre@gmail.com>
+ */
 final class PackagistActivityProvider implements ActivityProviderInterface
 {
     public function __construct(private PackagistApiClient $client)

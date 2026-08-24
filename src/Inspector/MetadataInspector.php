@@ -17,6 +17,9 @@ use PackApi\Model\Metadata;
 use PackApi\Package\Package;
 use PackApi\Provider\MetadataProviderInterface;
 
+/**
+ * @author Simon André <smn.andre@gmail.com>
+ */
 final class MetadataInspector implements MetadataInspectorInterface
 {
     /**

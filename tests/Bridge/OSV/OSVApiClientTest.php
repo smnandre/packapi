@@ -19,6 +19,8 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
+use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 #[CoversClass(OSVApiClient::class)]
 final class OSVApiClientTest extends TestCase
@@ -93,6 +95,17 @@ final class OSVApiClientTest extends TestCase
         $this->assertSame($responseData, $result);
     }
 
+    public function testQueryVulnerabilitiesWrapsTransportErrors(): void
+    {
+        $transport = new class extends \RuntimeException implements TransportExceptionInterface {};
+        $http = $this->createStub(HttpClientInterface::class);
+        $http->method('request')->willThrowException($transport);
+        $client = new OSVApiClient($http);
+
+        $this->expectException(NetworkException::class);
+        $client->queryVulnerabilities('npm', 'test-package');
+    }
+
     public function testGetVulnerabilityByIdReturnsData(): void
     {
         $responseData = [
@@ -123,6 +136,27 @@ final class OSVApiClientTest extends TestCase
         $this->assertNull($result);
     }
 
+    public function testGetVulnerabilityByIdThrowsNetworkExceptionOnError(): void
+    {
+        $client = new OSVApiClient(new MockHttpClient([
+            new MockResponse('', ['http_code' => 500]),
+        ]));
+
+        $this->expectException(NetworkException::class);
+        $client->getVulnerabilityById('OSV-2023-1234');
+    }
+
+    public function testGetVulnerabilityByIdWrapsTransportErrors(): void
+    {
+        $transport = new class extends \RuntimeException implements TransportExceptionInterface {};
+        $http = $this->createStub(HttpClientInterface::class);
+        $http->method('request')->willThrowException($transport);
+        $client = new OSVApiClient($http);
+
+        $this->expectException(NetworkException::class);
+        $client->getVulnerabilityById('OSV-2023-1234');
+    }
+
     public function testBatchQueryVulnerabilities(): void
     {
         $responseData = [
@@ -145,5 +179,26 @@ final class OSVApiClientTest extends TestCase
         $result = $this->client->batchQueryVulnerabilities($packages);
 
         $this->assertSame($responseData, $result);
+    }
+
+    public function testBatchQueryVulnerabilitiesThrowsNetworkExceptionOnError(): void
+    {
+        $client = new OSVApiClient(new MockHttpClient([
+            new MockResponse('', ['http_code' => 500]),
+        ]));
+
+        $this->expectException(NetworkException::class);
+        $client->batchQueryVulnerabilities([]);
+    }
+
+    public function testBatchQueryVulnerabilitiesWrapsTransportErrors(): void
+    {
+        $transport = new class extends \RuntimeException implements TransportExceptionInterface {};
+        $http = $this->createStub(HttpClientInterface::class);
+        $http->method('request')->willThrowException($transport);
+        $client = new OSVApiClient($http);
+
+        $this->expectException(NetworkException::class);
+        $client->batchQueryVulnerabilities([]);
     }
 }

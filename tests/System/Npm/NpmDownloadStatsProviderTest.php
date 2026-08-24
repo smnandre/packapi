@@ -18,6 +18,7 @@ use PackApi\Exception\NetworkException;
 use PackApi\Model\DownloadPeriod;
 use PackApi\Model\DownloadStats;
 use PackApi\Package\NpmPackage;
+use PackApi\Package\ComposerPackage;
 use PackApi\System\Npm\NpmDownloadStatsProvider;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
@@ -27,6 +28,14 @@ use Symfony\Component\HttpClient\Response\MockResponse;
 #[CoversClass(NpmDownloadStatsProvider::class)]
 final class NpmDownloadStatsProviderTest extends TestCase
 {
+    public function testSupportsOnlyNpmPackages(): void
+    {
+        $provider = new NpmDownloadStatsProvider(new NpmApiClient(new MockHttpClient(), new MockHttpClient()));
+
+        $this->assertTrue($provider->supports(new NpmPackage('package')));
+        $this->assertFalse($provider->supports(new ComposerPackage('vendor/package')));
+    }
+
     public function testGetStatsParsesMonthlyDownloads(): void
     {
         $statsClient = new MockHttpClient([
@@ -87,5 +96,14 @@ final class NpmDownloadStatsProviderTest extends TestCase
         $this->assertInstanceOf(DownloadPeriod::class, $downloadPeriod);
         $this->assertSame(21, $downloadPeriod->getCount());
         $this->assertSame('weekly', $downloadPeriod->getType());
+    }
+
+    public function testCapabilities(): void
+    {
+        $provider = new NpmDownloadStatsProvider(new NpmApiClient(new MockHttpClient(), new MockHttpClient()));
+        $package = new NpmPackage('package');
+
+        $this->assertSame(['total', 'monthly', 'weekly', 'daily'], $provider->getAvailablePeriods($package));
+        $this->assertFalse($provider->hasCdnStats($package));
     }
 }

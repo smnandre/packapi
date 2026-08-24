@@ -13,6 +13,9 @@ declare(strict_types=1);
 
 namespace PackApi\Package;
 
+/**
+ * @author Simon André <smn.andre@gmail.com>
+ */
 abstract class Package
 {
     protected ?string $repositoryUrl = null;

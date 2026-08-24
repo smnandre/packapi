@@ -17,6 +17,9 @@ use PackApi\Model\ActivitySummary;
 use PackApi\Package\Package;
 use PackApi\Provider\ActivityProviderInterface;
 
+/**
+ * @author Simon André <smn.andre@gmail.com>
+ */
 final class GitHubActivityProvider implements ActivityProviderInterface
 {
     public function __construct(private GitHubApiClient $client)

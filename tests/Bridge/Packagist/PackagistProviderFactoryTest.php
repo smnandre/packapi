@@ -45,10 +45,10 @@ final class PackagistProviderFactoryTest extends TestCase
 
     public function testCreateMethodsReturnCorrectInstances(): void
     {
-        $client = $this->createMock(HttpClientInterface::class);
+        $client = $this->createStub(HttpClientInterface::class);
         $client->method('withOptions')->willReturnSelf();
 
-        $factoryMock = $this->createMock(HttpClientFactoryInterface::class);
+        $factoryMock = $this->createStub(HttpClientFactoryInterface::class);
         $factoryMock->method('createClient')->willReturn($client);
 
         $factory = new PackagistProviderFactory($factoryMock);

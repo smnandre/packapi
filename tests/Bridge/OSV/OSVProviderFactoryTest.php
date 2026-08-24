@@ -20,7 +20,6 @@ use PackApi\Http\HttpClientFactoryInterface;
 use PackApi\Provider\SecurityProviderInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 #[CoversClass(OSVProviderFactory::class)]
@@ -31,12 +30,10 @@ final class OSVProviderFactoryTest extends TestCase
 
     protected function setUp(): void
     {
-        // Create a mock factory that returns a mock HTTP client
-        $this->httpClientFactory = $this->createMock(HttpClientFactoryInterface::class);
-        $mockHttpClient = new MockHttpClient();
+        // Create a factory stub that returns a scoped HTTP client stub.
+        $this->httpClientFactory = $this->createStub(HttpClientFactoryInterface::class);
 
-        // Mock the withOptions method to return the same client for testing
-        $scopedClient = $this->createMock(HttpClientInterface::class);
+        $scopedClient = $this->createStub(HttpClientInterface::class);
         $scopedClient->method('withOptions')->willReturnSelf();
 
         $this->httpClientFactory

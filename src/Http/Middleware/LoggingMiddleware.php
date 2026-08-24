@@ -18,6 +18,9 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 use Symfony\Contracts\HttpClient\ResponseStreamInterface;
 
+/**
+ * @author Simon André <smn.andre@gmail.com>
+ */
 final class LoggingMiddleware implements HttpClientInterface
 {
     public function __construct(

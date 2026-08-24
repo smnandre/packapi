@@ -86,7 +86,7 @@ Determines latest release and commit time from available versions.
 Uses GitHub API as a fallback to fetch YAML advisories for the package path under `FriendsOfPHP/security-advisories`.
 
 ### **Content Provider**
-Downloads the distribution archive of the latest version using `SecureFileHandler` and analyses its files.
+Downloads the distribution archive of the latest version using `SecureFileHandler` and analyses its files. When constructing the provider directly, its optional third argument selects the parent directory for temporary extraction; it defaults to `sys_get_temp_dir()`.
 
 ### **Statistics Provider**
 `ComposerDownloadStatsProvider` wraps `PackagistApiClient` to expose download counts as `DownloadStats` models.

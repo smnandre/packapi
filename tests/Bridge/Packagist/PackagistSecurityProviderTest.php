@@ -139,4 +139,31 @@ final class PackagistSecurityProviderTest extends TestCase
         $this->assertSame('high', $advisories[0]->getSeverity());
         $this->assertSame('https://example.com/CVE-1234.yaml', $advisories[0]->getLink());
     }
+
+    public function testGetSecurityAdvisoriesReturnsEmptyWhenDirectoryIsMissing(): void
+    {
+        $githubClient = new GitHubApiClient($this->getStubClient([
+            'GET /repos/FriendsOfPHP/security-advisories/contents/vendor/package' => [404, ['message' => 'Not Found']],
+        ]));
+        $provider = new PackagistSecurityProvider($githubClient);
+
+        $this->assertSame([], $provider->getSecurityAdvisories(new ComposerPackage('vendor/package')));
+    }
+
+    public function testGetSecurityAdvisoriesSkipsMissingFileContent(): void
+    {
+        $files = [[
+            'type' => 'file',
+            'name' => 'CVE-1234.yaml',
+            'path' => 'vendor/package/CVE-1234.yaml',
+            'html_url' => 'https://example.com/CVE-1234.yaml',
+        ]];
+        $githubClient = new GitHubApiClient($this->getStubClient([
+            'GET /repos/FriendsOfPHP/security-advisories/contents/vendor/package' => [200, $files],
+            'GET /repos/FriendsOfPHP/security-advisories/contents/vendor/package/CVE-1234.yaml' => [404, ['message' => 'Not Found']],
+        ]));
+        $provider = new PackagistSecurityProvider($githubClient);
+
+        $this->assertSame([], $provider->getSecurityAdvisories(new ComposerPackage('vendor/package')));
+    }
 }

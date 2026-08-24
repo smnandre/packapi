@@ -62,8 +62,8 @@ final class LoggingMiddlewareTest extends TestCase
 
     public function testRequestLogsMethodAndUrl(): void
     {
-        $response = $this->createMock(ResponseInterface::class);
-        $stream = $this->createMock(ResponseStreamInterface::class);
+        $response = $this->createStub(ResponseInterface::class);
+        $stream = $this->createStub(ResponseStreamInterface::class);
         $client = $this->getStubClient($response, $stream);
 
         $logger = $this->createMock(LoggerInterface::class);
@@ -82,10 +82,10 @@ final class LoggingMiddlewareTest extends TestCase
 
     public function testDelegatesRequestStreamAndWithOptions(): void
     {
-        $response = $this->createMock(ResponseInterface::class);
-        $stream = $this->createMock(ResponseStreamInterface::class);
+        $response = $this->createStub(ResponseInterface::class);
+        $stream = $this->createStub(ResponseStreamInterface::class);
         $client = $this->getStubClient($response, $stream);
-        $logger = $this->createMock(LoggerInterface::class);
+        $logger = $this->createStub(LoggerInterface::class);
 
         $middleware = new LoggingMiddleware($client, $logger);
 

@@ -22,6 +22,9 @@ use PackApi\System\Npm\NpmDownloadStatsProvider;
 use PackApi\System\Npm\NpmMetadataProvider;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
+/**
+ * @author Simon André <smn.andre@gmail.com>
+ */
 final class NpmProviderFactory
 {
     private readonly HttpClientInterface $registryClient;

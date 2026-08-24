@@ -33,6 +33,13 @@ final class ComposerMetadataProviderTest extends TestCase
 
     protected function setUp(): void
     {
+        $this->httpClient = $this->createStub(HttpClientInterface::class);
+        $this->apiClient = new PackagistApiClient($this->httpClient);
+        $this->provider = new ComposerMetadataProvider($this->apiClient);
+    }
+
+    private function useMockHttpClient(): void
+    {
         $this->httpClient = $this->createMock(HttpClientInterface::class);
         $this->apiClient = new PackagistApiClient($this->httpClient);
         $this->provider = new ComposerMetadataProvider($this->apiClient);
@@ -55,9 +62,10 @@ final class ComposerMetadataProviderTest extends TestCase
     public function testGetMetadataReturnsNullWhenApiReturnsEmpty(): void
     {
         $package = new ComposerPackage('vendor/package');
+        $this->useMockHttpClient();
 
-        $response = $this->createMock(ResponseInterface::class);
-        $response->method('getContent')->with(false)->willReturn(json_encode([]));
+        $response = $this->createStub(ResponseInterface::class);
+        $response->method('getContent')->willReturn(json_encode([]));
 
         $this->httpClient
             ->expects($this->once())
@@ -71,6 +79,7 @@ final class ComposerMetadataProviderTest extends TestCase
     public function testGetMetadataReturnsMetadata(): void
     {
         $package = new ComposerPackage('vendor/package');
+        $this->useMockHttpClient();
         $apiData = [
             'package' => [
                 'name' => 'vendor/package',
@@ -80,8 +89,8 @@ final class ComposerMetadataProviderTest extends TestCase
             ],
         ];
 
-        $response = $this->createMock(ResponseInterface::class);
-        $response->method('getContent')->with(false)->willReturn(json_encode($apiData));
+        $response = $this->createStub(ResponseInterface::class);
+        $response->method('getContent')->willReturn(json_encode($apiData));
 
         $this->httpClient
             ->expects($this->once())
@@ -96,5 +105,25 @@ final class ComposerMetadataProviderTest extends TestCase
         $this->assertSame('desc', $metadata->description);
         $this->assertSame('MIT', $metadata->license);
         $this->assertSame('https://example.com/vendor/package', $metadata->repository);
+    }
+
+    public function testGetMetadataAcceptsStringLicense(): void
+    {
+        $package = new ComposerPackage('vendor/package');
+        $this->useMockHttpClient();
+        $response = $this->createStub(ResponseInterface::class);
+        $response->method('getContent')->willReturn(json_encode([
+            'package' => [
+                'name' => 'vendor/package',
+                'license' => 'MIT',
+            ],
+        ]));
+
+        $this->httpClient
+            ->expects($this->once())
+            ->method('request')
+            ->willReturn($response);
+
+        $this->assertSame('MIT', $this->provider->getMetadata($package)?->getLicense());
     }
 }

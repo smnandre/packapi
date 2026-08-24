@@ -15,6 +15,9 @@ namespace PackApi\Package;
 
 use PackApi\Exception\ValidationException;
 
+/**
+ * @author Simon André <smn.andre@gmail.com>
+ */
 final class NpmPackage extends Package
 {
     public function __construct(string $name)

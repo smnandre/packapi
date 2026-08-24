@@ -17,6 +17,9 @@ use PackApi\Http\HttpClientFactoryInterface;
 use PackApi\Security\SecureFileHandler;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
+/**
+ * @author Simon André <smn.andre@gmail.com>
+ */
 final class PackagistProviderFactory
 {
     private readonly HttpClientInterface $scopedClient;

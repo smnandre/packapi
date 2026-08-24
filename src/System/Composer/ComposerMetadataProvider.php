@@ -19,6 +19,9 @@ use PackApi\Package\ComposerPackage;
 use PackApi\Package\Package;
 use PackApi\Provider\MetadataProviderInterface;
 
+/**
+ * @author Simon André <smn.andre@gmail.com>
+ */
 final class ComposerMetadataProvider implements MetadataProviderInterface
 {
     public function __construct(private readonly PackagistApiClient $client)

@@ -25,12 +25,12 @@ final class LoggingMiddlewareTest extends TestCase
     public function testRequestHandlesExceptionAndStillLogsA(): void
     {
         $calls = [];
-        $logger = $this->createMock(LoggerInterface::class);
+        $logger = $this->createStub(LoggerInterface::class);
         $logger->method('info')->willReturnCallback(function ($message, $context) use (&$calls) {
             $calls[] = [$message, $context];
         });
 
-        $client = $this->createMock(HttpClientInterface::class);
+        $client = $this->createStub(HttpClientInterface::class);
         $client->method('request')->will($this->throwException(new \Exception('fail')));
 
         $middleware = new LoggingMiddleware($client, $logger);

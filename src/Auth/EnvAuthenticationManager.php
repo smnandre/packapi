@@ -13,6 +13,9 @@ declare(strict_types=1);
 
 namespace PackApi\Auth;
 
+/**
+ * @author Simon André <smn.andre@gmail.com>
+ */
 class EnvAuthenticationManager implements AuthenticationManagerInterface
 {
     public function __construct(private readonly string $githubTokenEnvVariable = 'GITHUB_TOKEN')

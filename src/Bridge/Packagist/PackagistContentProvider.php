@@ -20,12 +20,19 @@ use PackApi\Package\Package;
 use PackApi\Provider\ContentProviderInterface;
 use PackApi\Security\SecureFileHandlerInterface;
 
+/**
+ * @author Simon André <smn.andre@gmail.com>
+ */
 final class PackagistContentProvider implements ContentProviderInterface
 {
+    private readonly string $tempDir;
+
     public function __construct(
         private readonly PackagistApiClient $client,
         private readonly SecureFileHandlerInterface $fileHandler,
+        ?string $tempDir = null,
     ) {
+        $this->tempDir = $tempDir ?? sys_get_temp_dir();
     }
 
     public function supports(Package $package): bool
@@ -51,8 +58,8 @@ final class PackagistContentProvider implements ContentProviderInterface
 
             $tarPath = $this->fileHandler->downloadSafely($distUrl);
 
-            $tmp = sys_get_temp_dir().'/packapi_'.uniqid('', true);
-            if (!mkdir($tmp, 0755, true) && !is_dir($tmp)) {
+            $tmp = $this->tempDir.'/packapi_'.uniqid('', true);
+            if (!@mkdir($tmp, 0755, true) && !is_dir($tmp)) {
                 throw new ValidationException('Cannot create extraction directory');
             }
 
@@ -116,10 +123,6 @@ final class PackagistContentProvider implements ContentProviderInterface
 
     private function cleanupDirectory(string $path): void
     {
-        if (!is_dir($path)) {
-            return;
-        }
-
         $files = new \RecursiveIteratorIterator(
             new \RecursiveDirectoryIterator($path, \RecursiveDirectoryIterator::SKIP_DOTS),
             \RecursiveIteratorIterator::CHILD_FIRST

@@ -58,8 +58,8 @@ final class JsDelivrApiClientTest extends TestCase
 
     public function testFetchPackageMetaThrowsOnTransportException(): void
     {
-        $transport = $this->createMock(TransportExceptionInterface::class);
-        $http = $this->createMock(HttpClientInterface::class);
+        $transport = new class extends \RuntimeException implements TransportExceptionInterface {};
+        $http = $this->createStub(HttpClientInterface::class);
         $http->method('request')->willThrowException($transport);
 
         $client = new JsDelivrApiClient($http);
@@ -119,8 +119,8 @@ final class JsDelivrApiClientTest extends TestCase
 
     public function testFetchFileListThrowsOnTransportException(): void
     {
-        $transport = $this->createMock(TransportExceptionInterface::class);
-        $http = $this->createMock(HttpClientInterface::class);
+        $transport = new class extends \RuntimeException implements TransportExceptionInterface {};
+        $http = $this->createStub(HttpClientInterface::class);
         $http->method('request')->willThrowException($transport);
 
         $client = new JsDelivrApiClient($http);

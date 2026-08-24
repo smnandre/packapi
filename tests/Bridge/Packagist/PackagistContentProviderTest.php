@@ -167,6 +167,27 @@ final class PackagistContentProviderTest extends TestCase
         $this->assertNull($provider->getContentOverview($package));
     }
 
+    public function testGetContentOverviewReturnsNullWhenExtractionDirectoryCannotBeCreated(): void
+    {
+        $package = new ComposerPackage('vendor/package');
+        $client = new PackagistApiClient($this->getStubClient([
+            'GET packages/vendor/package.json' => [200, [
+                'package' => ['versions' => ['1.0.0' => ['dist' => ['url' => 'https://example.org/archive.zip']]]],
+            ]],
+        ]));
+        $fileHandler = $this->createStub(SecureFileHandlerInterface::class);
+        $fileHandler->method('downloadSafely')->willReturn('/missing/archive.zip');
+        $tempFile = tempnam(sys_get_temp_dir(), 'packapi_blocked_');
+        $this->assertNotFalse($tempFile);
+        $provider = new PackagistContentProvider($client, $fileHandler, $tempFile);
+
+        try {
+            $this->assertNull($provider->getContentOverview($package));
+        } finally {
+            unlink($tempFile);
+        }
+    }
+
     public function testGetContentOverviewSuccessBuildsOverview(): void
     {
         $package = new ComposerPackage('vendor/package');
@@ -187,11 +208,14 @@ final class PackagistContentProviderTest extends TestCase
 
         /** @var SecureFileHandlerInterface&\PHPUnit\Framework\MockObject\MockObject $fileHandler */
         $fileHandler = $this->createMock(SecureFileHandlerInterface::class);
+        $archivePath = tempnam(sys_get_temp_dir(), 'packapi_archive_');
+        $this->assertNotFalse($archivePath);
+
         $fileHandler
             ->expects($this->once())
             ->method('downloadSafely')
             ->with('https://example.org/archive.zip')
-            ->willReturn(sys_get_temp_dir().'/fake_archive.zip');
+            ->willReturn($archivePath);
 
         $fileHandler
             ->expects($this->once())
@@ -211,15 +235,15 @@ final class PackagistContentProviderTest extends TestCase
 
         $fileHandler
             ->method('validatePath')
-            ->willReturn(true);
+            ->willReturnCallback(static fn (string $path): bool => 'docs/guide.md' !== $path);
 
         $provider = new PackagistContentProvider($client, $fileHandler);
 
         $overview = $provider->getContentOverview($package);
 
         $this->assertNotNull($overview);
-        $this->assertSame(6, $overview->fileCount);
-        $this->assertSame(34, $overview->totalSize); // sum of file sizes written above
+        $this->assertSame(5, $overview->fileCount);
+        $this->assertSame(30, $overview->totalSize);
         $this->assertTrue($overview->hasReadme);
         $this->assertTrue($overview->hasLicense);
         $this->assertTrue($overview->hasTests);
@@ -228,6 +252,7 @@ final class PackagistContentProviderTest extends TestCase
 
         $ignored = $overview->ignoredFiles;
         $this->assertContains('tests/ExampleTest.php', $ignored);
-        $this->assertContains('docs/guide.md', $ignored);
+        $this->assertNotContains('docs/guide.md', $ignored);
+        $this->assertFileDoesNotExist($archivePath);
     }
 }

@@ -30,6 +30,12 @@ final class BundlePhobiaSizeProviderTest extends TestCase
 
     protected function setUp(): void
     {
+        $this->bundlePhobiaApiClient = $this->createStub(BundlePhobiaApiClient::class);
+        $this->provider = new BundlePhobiaSizeProvider($this->bundlePhobiaApiClient);
+    }
+
+    private function useMockApiClient(): void
+    {
         $this->bundlePhobiaApiClient = $this->createMock(BundlePhobiaApiClient::class);
         $this->provider = new BundlePhobiaSizeProvider($this->bundlePhobiaApiClient);
     }
@@ -51,6 +57,7 @@ final class BundlePhobiaSizeProviderTest extends TestCase
     public function testGetBundleSizeReturnsNullWhenApiReturnsNull(): void
     {
         $package = new NpmPackage('nonexistent-package');
+        $this->useMockApiClient();
 
         $this->bundlePhobiaApiClient
             ->expects($this->once())
@@ -81,6 +88,7 @@ final class BundlePhobiaSizeProviderTest extends TestCase
                 'url' => 'https://github.com/facebook/react.git',
             ],
         ];
+        $this->useMockApiClient();
 
         $this->bundlePhobiaApiClient
             ->expects($this->once())
@@ -114,6 +122,7 @@ final class BundlePhobiaSizeProviderTest extends TestCase
             'size' => 39000,
             'gzip' => 12000,
         ];
+        $this->useMockApiClient();
 
         $this->bundlePhobiaApiClient
             ->expects($this->once())
@@ -130,6 +139,30 @@ final class BundlePhobiaSizeProviderTest extends TestCase
         $this->assertSame(12000, $result->getGzipSize());
     }
 
+    public function testGetBundleSizeForVersionReturnsNullWhenApiReturnsNull(): void
+    {
+        $package = new NpmPackage('react');
+        $this->useMockApiClient();
+        $this->bundlePhobiaApiClient
+            ->expects($this->once())
+            ->method('getBundleSize')
+            ->willReturn(null);
+
+        $this->assertNull($this->provider->getBundleSizeForVersion($package, '1.0.0'));
+    }
+
+    public function testGetBundleSizeForVersionReturnsNullOnFailure(): void
+    {
+        $package = new NpmPackage('react');
+        $this->useMockApiClient();
+        $this->bundlePhobiaApiClient
+            ->expects($this->once())
+            ->method('getBundleSize')
+            ->willThrowException(new \RuntimeException('API error'));
+
+        $this->assertNull($this->provider->getBundleSizeForVersion($package, '1.0.0'));
+    }
+
     public function testGetPackageHistoryReturnsHistoryData(): void
     {
         $package = new NpmPackage('react');
@@ -141,6 +174,7 @@ final class BundlePhobiaSizeProviderTest extends TestCase
                 ['version' => '18.0.0', 'size' => 41000, 'gzip' => 12500],
             ],
         ];
+        $this->useMockApiClient();
 
         $this->bundlePhobiaApiClient
             ->expects($this->once())
@@ -162,9 +196,22 @@ final class BundlePhobiaSizeProviderTest extends TestCase
         $this->assertNull($result);
     }
 
+    public function testGetPackageHistoryReturnsNullOnFailure(): void
+    {
+        $package = new NpmPackage('react');
+        $this->useMockApiClient();
+        $this->bundlePhobiaApiClient
+            ->expects($this->once())
+            ->method('getPackageHistory')
+            ->willThrowException(new \RuntimeException('API error'));
+
+        $this->assertNull($this->provider->getPackageHistory($package));
+    }
+
     public function testGetBundleSizeHandlesExceptionGracefully(): void
     {
         $package = new NpmPackage('test-package');
+        $this->useMockApiClient();
 
         $this->bundlePhobiaApiClient
             ->expects($this->once())
@@ -183,6 +230,7 @@ final class BundlePhobiaSizeProviderTest extends TestCase
             'name' => 'minimal-package',
             // Missing most fields to test defaults
         ];
+        $this->useMockApiClient();
 
         $this->bundlePhobiaApiClient
             ->expects($this->once())

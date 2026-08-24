@@ -17,6 +17,9 @@ use PackApi\Http\HttpClientFactoryInterface;
 use PackApi\Provider\SecurityProviderInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
+/**
+ * @author Simon André <smn.andre@gmail.com>
+ */
 final class OSVProviderFactory
 {
     private readonly HttpClientInterface $scopedClient;
