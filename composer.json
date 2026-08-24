@@ -1,12 +1,14 @@
 {
     "name": "smnandre/packapi",
-    "description": "PHP library for retrieving package metadata, download statistics, security advisories, and quality metrics from Composer, NPM, GitHub, jsDelivr, and OSV databases",
+    "description": "PHP library for retrieving package metadata, download statistics, security advisories, and quality metrics across Composer, NPM, Swift, GitHub, jsDelivr, and OSV",
     "license": "MIT",
     "type": "library",
     "keywords": [
         "composer",
         "packagist",
         "npm",
+        "swift",
+        "swift-package-manager",
         "github",
         "jsdelivr",
         "osv",

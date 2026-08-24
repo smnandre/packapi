@@ -16,6 +16,9 @@ namespace PackApi\Bridge\JsDelivr;
 use PackApi\Http\HttpClientFactoryInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
+/**
+ * @author Simon André <smn.andre@gmail.com>
+ */
 final class JsDelivrProviderFactory
 {
     private readonly HttpClientInterface $scopedClient;

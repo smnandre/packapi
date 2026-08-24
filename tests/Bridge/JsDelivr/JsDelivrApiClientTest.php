@@ -128,4 +128,63 @@ final class JsDelivrApiClientTest extends TestCase
         $this->expectException(NetworkException::class);
         $client->fetchFileList('npm/package');
     }
+
+    public function testFetchPackageStatsReturnsData(): void
+    {
+        $data = ['hits' => ['dates' => ['2026-07-10' => 42]]];
+        $client = new JsDelivrApiClient(new MockHttpClient([
+            new MockResponse(json_encode($data, JSON_THROW_ON_ERROR), ['http_code' => 200]),
+        ]));
+
+        $this->assertSame($data, $client->fetchPackageStats('npm', 'package'));
+    }
+
+    public function testFetchPackageStatsUsesStatsEndpoint(): void
+    {
+        $response = $this->createMock(ResponseInterface::class);
+        $response->method('getStatusCode')->willReturn(200);
+        $response->method('getContent')->with(false)->willReturn('{}');
+
+        $captured = null;
+        $http = new MockHttpClient(function (string $method, string $url) use ($response, &$captured) {
+            $captured = $url;
+
+            return $response;
+        });
+
+        (new JsDelivrApiClient($http))->fetchPackageStats('gh', 'Alamofire/Alamofire');
+
+        $this->assertStringEndsWith('v1/stats/packages/gh/Alamofire/Alamofire', $captured);
+    }
+
+    public function testFetchPackageStatsReturnsNullOn404(): void
+    {
+        $client = new JsDelivrApiClient(new MockHttpClient([
+            new MockResponse('', ['http_code' => 404]),
+        ]));
+
+        $this->assertNull($client->fetchPackageStats('npm', 'unknown'));
+    }
+
+    public function testFetchPackageStatsThrowsOnError(): void
+    {
+        $client = new JsDelivrApiClient(new MockHttpClient([
+            new MockResponse('', ['http_code' => 500]),
+        ]));
+
+        $this->expectException(NetworkException::class);
+        $client->fetchPackageStats('npm', 'package');
+    }
+
+    public function testFetchPackageStatsThrowsOnTransportException(): void
+    {
+        $transport = new class extends \RuntimeException implements TransportExceptionInterface {};
+        $http = $this->createStub(HttpClientInterface::class);
+        $http->method('request')->willThrowException($transport);
+
+        $client = new JsDelivrApiClient($http);
+
+        $this->expectException(NetworkException::class);
+        $client->fetchPackageStats('npm', 'package');
+    }
 }

@@ -17,6 +17,16 @@ There is no global configuration class. Configure behavior via:
 ### Package (Abstract)
 ### ComposerPackage
 ### NpmPackage
+### SwiftPackage
+
+`SwiftPackage` represents a Swift Package Manager package hosted in a GitHub repository.
+
+```php
+use PackApi\Package\SwiftPackage;
+
+$package = new SwiftPackage('Alamofire', 'Alamofire');
+// https://github.com/Alamofire/Alamofire is set as its repository URL.
+```
 
 ## HTTP Client Factory
 

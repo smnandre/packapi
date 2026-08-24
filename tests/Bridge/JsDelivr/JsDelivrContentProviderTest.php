@@ -17,7 +17,9 @@ use PackApi\Bridge\JsDelivr\JsDelivrApiClient;
 use PackApi\Bridge\JsDelivr\JsDelivrContentProvider;
 use PackApi\Model\ContentOverview;
 use PackApi\Model\File;
-use PackApi\Package\Package;
+use PackApi\Package\ComposerPackage;
+use PackApi\Package\NpmPackage;
+use PackApi\Package\SwiftPackage;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpClient\MockHttpClient;
@@ -28,22 +30,17 @@ final class JsDelivrContentProviderTest extends TestCase
 {
     private JsDelivrContentProvider $provider;
 
-    private function makePackage(string $id): Package
-    {
-        return new class('name', $id) extends Package {};
-    }
-
-    public function testSupportsRecognizesPrefixes(): void
+    public function testSupportsNpmAndSwiftPackages(): void
     {
         $client = new JsDelivrApiClient(new MockHttpClient());
         $this->provider = new JsDelivrContentProvider($client);
 
-        $npm = $this->makePackage('npm/test');
-        $composer = $this->makePackage('composer/test');
-        $other = $this->makePackage('gh/test');
+        $npm = new NpmPackage('test');
+        $swift = new SwiftPackage('Alamofire', 'Alamofire');
+        $other = new ComposerPackage('vendor/package');
 
         $this->assertTrue($this->provider->supports($npm));
-        $this->assertTrue($this->provider->supports($composer));
+        $this->assertTrue($this->provider->supports($swift));
         $this->assertFalse($this->provider->supports($other));
     }
 
@@ -55,9 +52,30 @@ final class JsDelivrContentProviderTest extends TestCase
         $client = new JsDelivrApiClient($http);
         $this->provider = new JsDelivrContentProvider($client);
 
-        $package = $this->makePackage('npm/test');
+        $package = new NpmPackage('test');
 
         $this->assertNull($this->provider->getContentOverview($package));
+    }
+
+    public function testGetContentOverviewReturnsNullForUnsupportedPackage(): void
+    {
+        $provider = new JsDelivrContentProvider(new JsDelivrApiClient(new MockHttpClient()));
+
+        $this->assertNull($provider->getContentOverview(new ComposerPackage('vendor/package')));
+    }
+
+    public function testGetContentOverviewUsesGitHubPathForSwiftPackage(): void
+    {
+        $capturedUrl = null;
+        $http = new MockHttpClient(function (string $method, string $url) use (&$capturedUrl): MockResponse {
+            $capturedUrl = $url;
+
+            return new MockResponse('{"files":[]}');
+        });
+        $provider = new JsDelivrContentProvider(new JsDelivrApiClient($http));
+
+        $this->assertNull($provider->getContentOverview(new SwiftPackage('Alamofire', 'Alamofire')));
+        $this->assertStringEndsWith('v1/package/gh/Alamofire/Alamofire/flat', $capturedUrl);
     }
 
     public function testGetContentOverviewBuildsModel(): void
@@ -75,7 +93,7 @@ final class JsDelivrContentProviderTest extends TestCase
         ]);
         $client = new JsDelivrApiClient($http);
         $this->provider = new JsDelivrContentProvider($client);
-        $package = $this->makePackage('npm/pkg');
+        $package = new NpmPackage('pkg');
 
         $overview = $this->provider->getContentOverview($package);
 

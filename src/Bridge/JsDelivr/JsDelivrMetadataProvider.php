@@ -14,9 +14,13 @@ declare(strict_types=1);
 namespace PackApi\Bridge\JsDelivr;
 
 use PackApi\Model\Metadata;
+use PackApi\Package\NpmPackage;
 use PackApi\Package\Package;
 use PackApi\Provider\MetadataProviderInterface;
 
+/**
+ * @author Simon André <smn.andre@gmail.com>
+ */
 final class JsDelivrMetadataProvider implements MetadataProviderInterface
 {
     public function __construct(private JsDelivrApiClient $client)
@@ -25,15 +29,16 @@ final class JsDelivrMetadataProvider implements MetadataProviderInterface
 
     public function supports(Package $package): bool
     {
-        $id = $package->getIdentifier();
-
-        return str_starts_with($id, 'npm/') || str_starts_with($id, 'composer/');
+        return $package instanceof NpmPackage;
     }
 
     public function getMetadata(Package $package): ?Metadata
     {
-        $id = $package->getIdentifier();
-        $meta = $this->client->fetchPackageMeta($id);
+        if (!$package instanceof NpmPackage) {
+            return null;
+        }
+
+        $meta = $this->client->fetchPackageMeta('npm/'.$package->getName());
         if (!$meta) {
             return null;
         }
